@@ -48,3 +48,26 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+## Supabaseの型定義を取得する
+
+Supabaseのデータベーススキーマから型定義を生成するには、以下の手順を実行します：
+
+1. Supabase CLIをインストール（まだの場合）
+
+   ```bash
+   npm install supabase --save-dev
+   ```
+
+2. 型定義を生成
+
+   ```bash
+   npm run generate-types
+   ```
+
+   このコマンドは`types/supabase.ts`に型定義を生成します。
+
+注意：
+- 型定義を生成するには、SupabaseのプロジェクトIDが必要です。
+- プロジェクトIDは`package.json`の`generate-types`スクリプト内で指定されています。
+- データベースのスキーマを変更した場合は、型定義を再生成する必要があります。
