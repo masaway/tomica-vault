@@ -53,5 +53,9 @@
     "supabase": "^2.22.12",
     "typescript": "~5.8.3"
   },
-  "private": true
+  "private": true,
+  "volta": {
+    "node": "22.15.1",
+    "npm": "10.9.2"
+  }
 }
