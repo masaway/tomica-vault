@@ -1,5 +1,6 @@
 import { StyleSheet, View, Text, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { NFCShortcut } from '../../components/NFCShortcut';
 
 export default function SearchScreen() {
   return (
@@ -15,6 +16,7 @@ export default function SearchScreen() {
       <View style={styles.content}>
         <Text>検索結果がここに表示されます</Text>
       </View>
+      <NFCShortcut />
     </SafeAreaView>
   );
 }
