@@ -27,24 +27,6 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>トミカコレクション</Text>
       </View>
-      <FlatList
-        data={tomicaList}
-        renderItem={({ item }) => (
-          <View style={styles.item}>
-            <Image
-              source={{ uri: item.image_url }}
-              style={styles.image}
-              contentFit="cover"
-            />
-            <View style={styles.itemContent}>
-              <Text style={styles.itemName}>{item.name}</Text>
-              <Text style={styles.itemSeries}>{item.series}</Text>
-              <Text style={styles.itemPrice}>¥{item.price.toLocaleString()}</Text>
-            </View>
-          </View>
-        )}
-        keyExtractor={(item) => item.id.toString()}
-      />
     </SafeAreaView>
   );
 }
