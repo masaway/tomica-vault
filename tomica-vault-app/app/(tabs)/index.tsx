@@ -1,8 +1,8 @@
-import { StyleSheet, View, Text, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, FlatList, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTomica } from '../../hooks/useTomica';
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
+import { NFCShortcut } from '../../components/NFCShortcut';
 
 export default function HomeScreen() {
   const { tomicaList, loading, error } = useTomica();
@@ -28,12 +28,7 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>トミカコレクション</Text>
       </View>
-      <TouchableOpacity 
-        style={styles.nfcButton}
-        onPress={() => router.push('/nfc-reader')}
-      >
-        <Text style={styles.nfcButtonText}>NFC</Text>
-      </TouchableOpacity>
+      <NFCShortcut />
     </SafeAreaView>
   );
 }
@@ -95,29 +90,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#007AFF',
     marginTop: 4,
-  },
-  nfcButton: {
-    position: 'absolute',
-    right: 20,
-    bottom: 20,
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: '#007AFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  nfcButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
 });
