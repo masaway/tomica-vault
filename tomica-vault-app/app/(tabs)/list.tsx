@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
 import { Tables } from '@/types/supabase';
+import { NFCShortcut } from '../../components/NFCShortcut';
 
 type OwnedTomica = Tables<'owned_tomica'>;
 
@@ -48,6 +49,7 @@ export default function ListScreen() {
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.list}
       />
+      <NFCShortcut />
     </SafeAreaView>
   );
 }

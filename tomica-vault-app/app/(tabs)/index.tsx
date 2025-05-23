@@ -2,6 +2,7 @@ import { StyleSheet, View, Text, FlatList, ActivityIndicator } from 'react-nativ
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTomica } from '../../hooks/useTomica';
 import { Image } from 'expo-image';
+import { NFCShortcut } from '../../components/NFCShortcut';
 
 export default function HomeScreen() {
   const { tomicaList, loading, error } = useTomica();
@@ -27,6 +28,7 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>トミカコレクション</Text>
       </View>
+      <NFCShortcut />
     </SafeAreaView>
   );
 }
