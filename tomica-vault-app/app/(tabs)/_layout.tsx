@@ -21,6 +21,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="add"
+        options={{
+          title: '新規登録',
+          tabBarIcon: ({ color }) => <FontAwesome name="plus-circle" size={32} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="list"
         options={{
           title: '一覧',
