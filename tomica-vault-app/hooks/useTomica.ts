@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
-import { supabase, Tomica, TOMICA_TABLE } from '../lib/supabase';
+import { useState } from 'react';
+import { supabase, TOMICA_TABLE } from '../lib/supabase';
 import { Database } from '../types/supabase';
+
+export type Tomica = Database['public']['Tables']['owned_tomica']['Row'];
 
 export function useTomica() {
   const [tomicaList, setTomicaList] = useState<Tomica[]>([]);
@@ -14,7 +16,8 @@ export function useTomica() {
       const { data, error } = await supabase
         .from(TOMICA_TABLE)
         .select('*')
-        .order('created_at', { ascending: false });
+        .is('deleted_at', null)
+        .order('name', { ascending: true });
 
       if (error) throw error;
       setTomicaList(data || []);
@@ -33,7 +36,7 @@ export function useTomica() {
         .from(TOMICA_TABLE)
         .select('*')
         .or(`name.ilike.%${query}%,series.ilike.%${query}%`)
-        .order('created_at', { ascending: false });
+        .order('name', { ascending: true });
 
       if (error) throw error;
       setTomicaList(data || []);
@@ -63,10 +66,6 @@ export function useTomica() {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchTomicaList();
-  }, []);
 
   return {
     tomicaList,

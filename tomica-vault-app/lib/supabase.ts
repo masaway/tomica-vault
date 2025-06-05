@@ -9,8 +9,5 @@ const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
 // Supabaseクライアントの作成
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 
-// トミカの型定義
-export type Tomica = Database['public']['Tables']['owned_tomica']['Row'];
-
 // トミカのテーブル名
 export const TOMICA_TABLE = 'owned_tomica'; 
