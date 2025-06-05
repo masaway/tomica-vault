@@ -1,7 +1,8 @@
 // app/(tabs)/search.tsx
-import { StyleSheet, View, Text, TextInput, FlatList } from 'react-native';
+import { StyleSheet, View, Text, TextInput, FlatList, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NFCShortcut } from '../../components/NFCShortcut';
+import { router } from 'expo-router';
 
 // 固定のサンプルデータ
 const SAMPLE_DATA = [
@@ -56,6 +57,13 @@ export default function SearchScreen() {
     }
   };
 
+  const handleItemPress = (item: typeof SAMPLE_DATA[0]) => {
+    router.push({
+      pathname: '/details',
+      params: { tomica: JSON.stringify(item) }
+    });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -70,7 +78,10 @@ export default function SearchScreen() {
         <FlatList
           data={SAMPLE_DATA}
           renderItem={({ item }) => (
-            <View style={styles.resultItem}>
+            <TouchableOpacity 
+              style={styles.resultItem}
+              onPress={() => handleItemPress(item)}
+            >
               <Text style={styles.resultName}>{item.name}</Text>
               <View style={styles.situationContainer}>
                 <Text style={[
@@ -86,7 +97,7 @@ export default function SearchScreen() {
               <Text style={styles.updateInfo}>
                 更新者: {item.updatedBy}
               </Text>
-            </View>
+            </TouchableOpacity>
           )}
           keyExtractor={(item) => item.id.toString()}
         />
