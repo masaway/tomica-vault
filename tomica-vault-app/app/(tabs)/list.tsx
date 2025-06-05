@@ -1,35 +1,17 @@
 import { StyleSheet, View, Text, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { supabase } from '@/lib/supabase';
-import { useEffect, useState } from 'react';
-import { Tables } from '@/types/supabase';
+import { useEffect } from 'react';
 import { NFCShortcut } from '../../components/NFCShortcut';
-
-type OwnedTomica = Tables<'owned_tomica'>;
+import { useTomica, Tomica } from '@/hooks/useTomica';
 
 export default function ListScreen() {
-  const [tomicaList, setTomicaList] = useState<OwnedTomica[]>([]);
+  const { tomicaList, loading, error, fetchTomicaList } = useTomica();
 
   useEffect(() => {
     fetchTomicaList();
   }, []);
 
-  const fetchTomicaList = async () => {
-    const { data, error } = await supabase
-      .from('owned_tomica')
-      .select('*')
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching tomica list:', error);
-      return;
-    }
-
-    setTomicaList(data || []);
-  };
-
-  const renderItem = ({ item }: { item: OwnedTomica }) => (
+  const renderItem = ({ item }: { item: Tomica }) => (
     <View style={styles.item}>
       <Text style={styles.itemName}>{item.name}</Text>
       <Text style={styles.itemDate}>
@@ -43,12 +25,22 @@ export default function ListScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>トミカ一覧</Text>
       </View>
-      <FlatList
-        data={tomicaList}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.list}
-      />
+      {loading ? (
+        <View style={styles.center}>
+          <Text>読み込み中...</Text>
+        </View>
+      ) : error ? (
+        <View style={styles.center}>
+          <Text style={styles.error}>{error}</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={tomicaList}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.list}
+        />
+      )}
       <NFCShortcut />
     </SafeAreaView>
   );
@@ -84,5 +76,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginTop: 4,
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  error: {
+    color: 'red',
   },
 }); 
