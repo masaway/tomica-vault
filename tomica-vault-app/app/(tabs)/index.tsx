@@ -7,21 +7,6 @@ import { NFCShortcut } from '../../components/NFCShortcut';
 export default function HomeScreen() {
   const { tomicaList, loading, error } = useTomica();
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>{error}</Text>
-      </View>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container}>
