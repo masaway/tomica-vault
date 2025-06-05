@@ -1,8 +1,8 @@
 // app/(tabs)/search.tsx
-import { StyleSheet, View, Text, TextInput, FlatList, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, TextInput, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NFCShortcut } from '../../components/NFCShortcut';
-import { router } from 'expo-router';
+import { TomicaItem } from '../../components/TomicaItem';
 
 // 固定のサンプルデータ
 const SAMPLE_DATA = [
@@ -44,26 +44,6 @@ const SAMPLE_DATA = [
 ];
 
 export default function SearchScreen() {
-  const getSituationStyle = (situation: string) => {
-    switch (situation) {
-      case '外出中':
-        return styles.situationOut;
-      case '帰宅中':
-        return styles.situationReturning;
-      case '家出中':
-        return styles.situationMissing;
-      default:
-        return styles.situationOut;
-    }
-  };
-
-  const handleItemPress = (item: typeof SAMPLE_DATA[0]) => {
-    router.push({
-      pathname: '/details',
-      params: { tomica: JSON.stringify(item) }
-    });
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -78,26 +58,7 @@ export default function SearchScreen() {
         <FlatList
           data={SAMPLE_DATA}
           renderItem={({ item }) => (
-            <TouchableOpacity 
-              style={styles.resultItem}
-              onPress={() => handleItemPress(item)}
-            >
-              <Text style={styles.resultName}>{item.name}</Text>
-              <View style={styles.situationContainer}>
-                <Text style={[
-                  styles.situation,
-                  getSituationStyle(item.situation)
-                ]}>
-                  {item.situation}
-                </Text>
-              </View>
-              <Text style={styles.updateInfo}>
-                最終更新: {new Date(item.lastUpdatedDate).toLocaleDateString()}
-              </Text>
-              <Text style={styles.updateInfo}>
-                更新者: {item.updatedBy}
-              </Text>
-            </TouchableOpacity>
+            <TomicaItem item={item} />
           )}
           keyExtractor={(item) => item.id.toString()}
         />
@@ -132,43 +93,5 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-  },
-  resultItem: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  resultName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  situationContainer: {
-    marginTop: 8,
-  },
-  situation: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    overflow: 'hidden',
-    alignSelf: 'flex-start',
-  },
-  situationOut: {
-    backgroundColor: '#fff3e0', // オレンジ系
-    color: '#e65100',
-  },
-  situationReturning: {
-    backgroundColor: '#e8f5e9', // 緑系
-    color: '#2e7d32',
-  },
-  situationMissing: {
-    backgroundColor: '#ffebee', // 赤系
-    color: '#d32f2f',
-  },
-  updateInfo: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
   },
 });
