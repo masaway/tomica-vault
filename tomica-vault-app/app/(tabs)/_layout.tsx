@@ -1,7 +1,29 @@
 import { Tabs } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
+import { Alert, Pressable, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
 
 export default function TabLayout() {
+  const router = useRouter();
+
+  const handleAddPress = () => {
+    Alert.alert(
+      '新規登録',
+      '新しいトミカを登録しますか？',
+      [
+        {
+          text: 'キャンセル',
+          style: 'cancel',
+        },
+        {
+          text: '登録する',
+          onPress: () => router.push('/add'),
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
   return (
     <Tabs screenOptions={{
       tabBarActiveTintColor: '#007AFF',
@@ -24,7 +46,25 @@ export default function TabLayout() {
         name="add"
         options={{
           title: '新規登録',
-          tabBarIcon: ({ color }) => <FontAwesome name="plus-circle" size={32} color={color} />,
+          tabBarButton: (props) => (
+            <Pressable
+              onPress={handleAddPress}
+              style={({ pressed }) => [
+                {
+                  opacity: pressed ? 0.7 : 1,
+                  alignItems: 'center',
+                },
+              ]}
+            >
+              <FontAwesome
+                name="plus-circle"
+                size={32}
+                color="#007AFF"
+                style={{ marginBottom: 2 }}
+              />
+              <Text style={{ fontSize: 10, color: '#007AFF' }}>新規登録</Text>
+            </Pressable>
+          ),
         }}
       />
       <Tabs.Screen
