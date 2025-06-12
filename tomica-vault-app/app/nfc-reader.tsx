@@ -2,6 +2,8 @@ import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import ReactLogo from '@assets/images/react-logo.png';
 
 export default function NFCReaderScreen() {
   return (
@@ -14,7 +16,11 @@ export default function NFCReaderScreen() {
       </View>
       <View style={styles.content}>
         <View style={styles.nfcIconContainer}>
-          <Ionicons name="scan" size={120} color="#007AFF" />
+          <Image
+            source={ReactLogo}
+            style={{ width: 100, height: 100 }}
+            contentFit="contain"
+          />
         </View>
         <Text style={styles.instruction}>
           NFCタグをスマートフォンの背面に近づけてください
