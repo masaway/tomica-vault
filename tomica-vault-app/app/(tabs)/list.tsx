@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect } from 'react';
 import { NFCShortcut } from '../../components/NFCShortcut';
 import { useTomica, Tomica } from '@/hooks/useTomica';
+import { TomicaItem } from '../../components/TomicaItem';
 
 export default function ListScreen() {
   const { tomicaList, loading, error, fetchTomicaList } = useTomica();
@@ -12,12 +13,15 @@ export default function ListScreen() {
   }, []);
 
   const renderItem = ({ item }: { item: Tomica }) => (
-    <View style={styles.item}>
-      <Text style={styles.itemName}>{item.name}</Text>
-      <Text style={styles.itemDate}>
-        購入日: {item.purchase_date ? new Date(item.purchase_date).toLocaleDateString() : '未設定'}
-      </Text>
-    </View>
+    <TomicaItem
+      item={{
+        id: item.id,
+        name: item.name,
+        situation: item.situation || '外出中',
+        lastUpdatedDate: item.updated_at || new Date().toISOString(),
+        updatedBy: item.updated_by || 'システム'
+      }}
+    />
   );
 
   return (
@@ -62,20 +66,6 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: 16,
-  },
-  item: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  itemName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  itemDate: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
   },
   center: {
     flex: 1,
