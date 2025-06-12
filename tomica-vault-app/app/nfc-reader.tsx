@@ -14,7 +14,7 @@ export default function NFCReaderScreen() {
       </View>
       <View style={styles.content}>
         <View style={styles.nfcIconContainer}>
-          <Ionicons name="nfc" size={120} color="#007AFF" />
+          <Ionicons name="scan" size={120} color="#007AFF" />
         </View>
         <Text style={styles.instruction}>
           NFCタグをスマートフォンの背面に近づけてください
