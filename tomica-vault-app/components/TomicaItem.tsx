@@ -5,6 +5,9 @@ type Tomica = {
   id: number;
   name: string;
   situation: string;
+  nfc_tag_uid: string;
+  check_in_at: string | null;
+  checked_out_at: string | null;
   lastUpdatedDate: string;
   updatedBy: string;
 };
@@ -21,21 +24,29 @@ export function TomicaItem({ item, onPress }: TomicaItemProps) {
         return styles.situationOut;
       case '帰宅中':
         return styles.situationReturning;
-      case '家出中':
-        return styles.situationMissing;
       default:
-        return styles.situationOut;
+        return styles.situationReturning;
     }
+  };
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return '未設定';
+    return new Date(dateString).toLocaleString('ja-JP', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   const handlePress = () => {
     if (onPress) {
       onPress(item);
     } else {
-      // デフォルトの動作：詳細画面に遷移
       router.push({
         pathname: '/details',
-        params: { tomica: JSON.stringify(item) }
+        params: { id: item.id.toString() }
       });
     }
   };
@@ -55,11 +66,13 @@ export function TomicaItem({ item, onPress }: TomicaItemProps) {
         </Text>
       </View>
       <Text style={styles.updateInfo}>
-        最終更新: {new Date(item.lastUpdatedDate).toLocaleDateString()}
+        最終更新: {formatDate(item.lastUpdatedDate)}
       </Text>
-      <Text style={styles.updateInfo}>
-        更新者: {item.updatedBy}
-      </Text>
+      {item.updatedBy && (
+        <Text style={styles.updateInfo}>
+          更新者: {item.updatedBy}
+        </Text>
+      )}
     </TouchableOpacity>
   );
 }
