@@ -3,6 +3,28 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect } from 'react';
 import { NFCShortcut } from '../../components/NFCShortcut';
 import { useTomica, Tomica } from '@/hooks/useTomica';
+import { TomicaItem } from '../../components/TomicaItem';
+
+// トミカの状態を判断する関数
+const determineTomicaSituation = (tomica: Tomica): '外出中' | '帰宅中' => {
+  const { check_in_at, checked_out_at } = tomica;
+
+  // check_in_atがnullなら外出中
+  if (check_in_at === null) {
+    return '外出中';
+  }
+
+  // checked_out_atがnullなら帰宅中
+  if (checked_out_at === null) {
+    return '帰宅中';
+  }
+
+  // 両方の値が存在する場合、日付を比較
+  const checkedInDate = new Date(check_in_at).getTime();
+  const checkedOutDate = new Date(checked_out_at).getTime();
+
+  return checkedInDate > checkedOutDate ? '帰宅中' : '外出中';
+};
 
 export default function ListScreen() {
   const { tomicaList, loading, error, fetchTomicaList } = useTomica();
@@ -12,12 +34,18 @@ export default function ListScreen() {
   }, []);
 
   const renderItem = ({ item }: { item: Tomica }) => (
-    <View style={styles.item}>
-      <Text style={styles.itemName}>{item.name}</Text>
-      <Text style={styles.itemDate}>
-        購入日: {item.purchase_date ? new Date(item.purchase_date).toLocaleDateString() : '未設定'}
-      </Text>
-    </View>
+    <TomicaItem
+      item={{
+        id: item.id,
+        name: item.name,
+        situation: determineTomicaSituation(item),
+        nfc_tag_uid: item.nfc_tag_uid,
+        check_in_at: item.check_in_at,
+        checked_out_at: item.checked_out_at,
+        lastUpdatedDate: item.updated_at,
+        updatedBy: item.updated_by
+      }}
+    />
   );
 
   return (
@@ -62,20 +90,6 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: 16,
-  },
-  item: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  itemName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  itemDate: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
   },
   center: {
     flex: 1,
