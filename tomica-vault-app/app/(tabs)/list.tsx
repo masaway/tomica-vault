@@ -1,6 +1,6 @@
 import { StyleSheet, View, Text, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { NFCShortcut } from '../../components/NFCShortcut';
 import { useTomica, Tomica } from '@/hooks/useTomica';
 import { TomicaItem } from '../../components/TomicaItem';
@@ -28,10 +28,17 @@ const determineTomicaSituation = (tomica: Tomica): '外出中' | '帰宅中' => 
 
 export default function ListScreen() {
   const { tomicaList, loading, error, fetchTomicaList } = useTomica();
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchTomicaList();
   }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchTomicaList();
+    setRefreshing(false);
+  };
 
   const renderItem = ({ item }: { item: Tomica }) => (
     <TomicaItem
@@ -67,6 +74,8 @@ export default function ListScreen() {
           renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.list}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
         />
       )}
       <NFCShortcut />
