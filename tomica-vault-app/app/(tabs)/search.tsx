@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, TextInput, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NFCShortcut } from '../../components/NFCShortcut';
 import { TomicaItem } from '../../components/TomicaItem';
+import { useThemeColor } from '../../hooks/useThemeColor';
 
 // 固定のサンプルデータ
 const SAMPLE_DATA = [
@@ -44,14 +45,26 @@ const SAMPLE_DATA = [
 ];
 
 export default function SearchScreen() {
+  const backgroundColor = useThemeColor({}, 'background');
+  const textColor = useThemeColor({}, 'text');
+  const borderColor = useThemeColor({}, 'border');
+  const cardColor = useThemeColor({}, 'card');
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>検索</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor }]}>
+      <View style={[styles.header, { borderBottomColor: borderColor }]}>
+        <Text style={[styles.title, { color: textColor }]}>検索</Text>
         <TextInput
-          style={styles.searchInput}
+          style={[
+            styles.searchInput,
+            {
+              borderColor: borderColor,
+              backgroundColor: cardColor,
+              color: textColor,
+            },
+          ]}
           placeholder="トミカを検索..."
-          placeholderTextColor="#999"
+          placeholderTextColor={borderColor}
         />
       </View>
       <View style={styles.content}>
@@ -71,12 +84,10 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   header: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   title: {
     fontSize: 24,
@@ -86,10 +97,8 @@ const styles = StyleSheet.create({
   searchInput: {
     height: 40,
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 8,
     paddingHorizontal: 16,
-    backgroundColor: '#f5f5f5',
   },
   content: {
     flex: 1,
