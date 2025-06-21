@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { NFCShortcut } from '../../components/NFCShortcut';
 import { useTomica, Tomica } from '@/hooks/useTomica';
 import { TomicaItem } from '../../components/TomicaItem';
+import { useThemeColor } from '../../hooks/useThemeColor';
 
 // トミカの状態を判断する関数
 const determineTomicaSituation = (tomica: Tomica): '外出中' | '帰宅中' => {
@@ -29,6 +30,9 @@ const determineTomicaSituation = (tomica: Tomica): '外出中' | '帰宅中' => 
 export default function ListScreen() {
   const { tomicaList, loading, error, fetchTomicaList } = useTomica();
   const [refreshing, setRefreshing] = useState(false);
+  const backgroundColor = useThemeColor({}, 'background');
+  const textColor = useThemeColor({}, 'text');
+  const borderColor = useThemeColor({}, 'border');
 
   useEffect(() => {
     fetchTomicaList();
@@ -56,13 +60,13 @@ export default function ListScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>トミカ一覧</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor }]}>
+      <View style={[styles.header, { borderBottomColor: borderColor }]}>
+        <Text style={[styles.title, { color: textColor }]}>トミカ一覧</Text>
       </View>
       {loading ? (
         <View style={styles.center}>
-          <Text>読み込み中...</Text>
+          <Text style={{ color: textColor }}>読み込み中...</Text>
         </View>
       ) : error ? (
         <View style={styles.center}>
@@ -86,12 +90,10 @@ export default function ListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   header: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   title: {
     fontSize: 24,
