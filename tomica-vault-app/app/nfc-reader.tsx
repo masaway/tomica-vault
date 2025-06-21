@@ -3,7 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import ReactLogo from '@assets/images/react-logo.png';
+import ReactLogo from '../assets/images/react-logo.png';
 
 export default function NFCReaderScreen() {
   return (

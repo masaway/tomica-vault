@@ -1,16 +1,28 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase, TOMICA_TABLE } from '../lib/supabase';
 import { Database } from '../types/supabase';
 
 export type Tomica = Database['public']['Tables']['owned_tomica']['Row'];
 
+export interface TomicaStats {
+  total: number;
+  checkedOut: number;
+  checkedIn: number;
+  recentActivity: {
+    name: string;
+    action: 'チェックイン' | 'チェックアウト';
+    timestamp: string;
+  }[];
+}
+
 export function useTomica() {
   const [tomicaList, setTomicaList] = useState<Tomica[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState<TomicaStats | null>(null);
 
   // トミカ一覧を取得
-  const fetchTomicaList = async () => {
+  const fetchTomicaList = useCallback(async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -26,10 +38,10 @@ export function useTomica() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // トミカを検索
-  const searchTomica = async (query: string) => {
+  const searchTomica = useCallback(async (query: string) => {
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -45,10 +57,10 @@ export function useTomica() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // トミカの詳細を取得
-  const getTomicaById = async (id: number) => {
+  const getTomicaById = useCallback(async (id: number) => {
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -65,14 +77,90 @@ export function useTomica() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // 統計情報を計算
+  const calculateStats = useCallback((tomicaData: Tomica[]): TomicaStats => {
+    const total = tomicaData.length;
+    let checkedOut = 0;
+    let checkedIn = 0;
+    const recentActivity: TomicaStats['recentActivity'] = [];
+
+    tomicaData.forEach(tomica => {
+      const { check_in_at, checked_out_at } = tomica;
+      
+      // チェック状態を判定
+      if (check_in_at === null) {
+        checkedOut++;
+      } else if (checked_out_at === null) {
+        checkedIn++;
+      } else {
+        const checkedInDate = new Date(check_in_at).getTime();
+        const checkedOutDate = new Date(checked_out_at).getTime();
+        if (checkedInDate > checkedOutDate) {
+          checkedIn++;
+        } else {
+          checkedOut++;
+        }
+      }
+
+      // 最近のアクティビティを追加
+      if (check_in_at) {
+        recentActivity.push({
+          name: tomica.name,
+          action: 'チェックイン',
+          timestamp: check_in_at
+        });
+      }
+      if (checked_out_at) {
+        recentActivity.push({
+          name: tomica.name,
+          action: 'チェックアウト',
+          timestamp: checked_out_at
+        });
+      }
+    });
+
+    // 最近のアクティビティを時間順でソート（最新5件）
+    recentActivity.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    
+    return {
+      total,
+      checkedOut,
+      checkedIn,
+      recentActivity: recentActivity.slice(0, 5)
+    };
+  }, []);
+
+  // 統計情報を取得
+  const fetchStats = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from(TOMICA_TABLE)
+        .select('*')
+        .is('deleted_at', null)
+        .order('updated_at', { ascending: false });
+
+      if (error) throw error;
+      const calculatedStats = calculateStats(data || []);
+      setStats(calculatedStats);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'エラーが発生しました');
+    } finally {
+      setLoading(false);
+    }
+  }, [calculateStats]);
 
   return {
     tomicaList,
     loading,
     error,
+    stats,
     fetchTomicaList,
     searchTomica,
     getTomicaById,
+    fetchStats,
+    calculateStats,
   };
 } 
