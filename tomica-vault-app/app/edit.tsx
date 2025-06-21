@@ -18,6 +18,17 @@ export default function EditScreen() {
   const { updateTomica } = useTomica();
   const [isLoading, setIsLoading] = useState(false);
 
+  // 編集後に最新詳細画面へ遷移するナビゲーション処理を関数化
+  const navigateToLatestDetails = (router: ReturnType<typeof useRouter>, tomicaId: number) => {
+    router.back(); // 編集画面pop
+    setTimeout(() => {
+      router.back(); // 古い詳細画面pop
+      setTimeout(() => {
+        router.push({ pathname: '/details', params: { id: tomicaId } });
+      }, 100);
+    }, 100);
+  };
+
   const handleSave = async () => {
     if (!name.trim()) {
       Alert.alert('エラー', '名前を入力してください');
@@ -28,7 +39,10 @@ export default function EditScreen() {
       const result = await updateTomica(tomica.id, { name, situation, notes });
       if (result) {
         Alert.alert('成功', '保存しました', [
-          { text: 'OK', onPress: () => router.back() }
+          {
+            text: 'OK',
+            onPress: () => navigateToLatestDetails(router, tomica.id)
+          }
         ]);
       } else {
         Alert.alert('エラー', '保存に失敗しました');
