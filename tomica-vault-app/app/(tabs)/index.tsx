@@ -129,8 +129,6 @@ const styles = StyleSheet.create({
   headerGradient: {
     paddingHorizontal: 20,
     paddingVertical: 24,
-    paddingTop: 16,
-    paddingBottom: 32,
   },
   title: {
     fontSize: 28,
@@ -149,7 +147,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    paddingTop: 20,
+    paddingTop: 0,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     minHeight: '100%',
