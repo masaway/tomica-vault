@@ -1,34 +1,57 @@
-import { StyleSheet, View, Text, TextInput, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, TextInput, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-
-type Tomica = {
-  id: number;
-  name: string;
-  situation: string;
-  lastUpdatedDate: string;
-  updatedBy: string;
-};
+import { useTomica } from '../hooks/useTomica';
+import { Database } from '../types/supabase';
 
 export default function EditScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const tomica = JSON.parse(params.tomica as string) as Tomica;
+  const tomica = JSON.parse(params.tomica as string) as Database['public']['Tables']['owned_tomica']['Row'];
 
   const [name, setName] = useState(tomica.name);
-  const [situation, setSituation] = useState(tomica.situation);
-  const [notes, setNotes] = useState('特別な限定版のトミカです。状態は良好です。');
+  const [situation, setSituation] = useState<'外出中' | '帰宅中'>(
+    tomica.checked_out_at && (!tomica.check_in_at || new Date(tomica.checked_out_at) > new Date(tomica.check_in_at)) ? '外出中' : '帰宅中'
+  );
+  const [notes, setNotes] = useState(tomica.memo || '');
+  const { updateTomica } = useTomica();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSave = () => {
-    // TODO: 実際の保存処理を実装
-    console.log('Save tomica:', {
-      ...tomica,
-      name,
-      situation,
-      notes,
-    });
-    router.back();
+  // 編集後に最新詳細画面へ遷移するナビゲーション処理を関数化
+  const navigateToLatestDetails = (router: ReturnType<typeof useRouter>, tomicaId: number) => {
+    router.back(); // 編集画面pop
+    setTimeout(() => {
+      router.back(); // 古い詳細画面pop
+      setTimeout(() => {
+        router.push({ pathname: '/details', params: { id: tomicaId } });
+      }, 100);
+    }, 100);
+  };
+
+  const handleSave = async () => {
+    if (!name.trim()) {
+      Alert.alert('エラー', '名前を入力してください');
+      return;
+    }
+    try {
+      setIsLoading(true);
+      const result = await updateTomica(tomica.id, { name, situation, notes });
+      if (result) {
+        Alert.alert('成功', '保存しました', [
+          {
+            text: 'OK',
+            onPress: () => navigateToLatestDetails(router, tomica.id)
+          }
+        ]);
+      } else {
+        Alert.alert('エラー', '保存に失敗しました');
+      }
+    } catch (error) {
+      Alert.alert('エラー', '保存に失敗しました');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -45,8 +68,8 @@ export default function EditScreen() {
             </Text>
           ),
           headerRight: () => (
-            <TouchableOpacity onPress={handleSave}>
-              <Text style={styles.saveButton}>保存</Text>
+            <TouchableOpacity onPress={handleSave} disabled={isLoading}>
+              <Text style={styles.saveButton}>{isLoading ? '保存中...' : '保存'}</Text>
             </TouchableOpacity>
           ),
         }} 
@@ -61,12 +84,13 @@ export default function EditScreen() {
               value={name}
               onChangeText={setName}
               placeholder="トミカの名前"
+              editable={!isLoading}
             />
           </View>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>状況</Text>
             <View style={styles.situationButtons}>
-              {['外出中', '帰宅中'].map((s) => (
+              {(['外出中', '帰宅中'] as const).map((s) => (
                 <TouchableOpacity
                   key={s}
                   style={[
@@ -74,6 +98,7 @@ export default function EditScreen() {
                     situation === s && styles.situationButtonActive,
                   ]}
                   onPress={() => setSituation(s)}
+                  disabled={isLoading}
                 >
                   <Text
                     style={[
@@ -98,6 +123,7 @@ export default function EditScreen() {
             placeholder="メモを入力"
             multiline
             numberOfLines={4}
+            editable={!isLoading}
           />
         </View>
       </ScrollView>
