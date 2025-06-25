@@ -161,13 +161,14 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
   statsContainer: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingTop: 0,
   },
   statsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     marginBottom: 16,
+    gap: 8,
   },
   loadingContainer: {
     flex: 1,

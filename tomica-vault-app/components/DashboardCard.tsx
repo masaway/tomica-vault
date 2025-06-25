@@ -29,7 +29,7 @@ export function DashboardCard({
     >
       <View style={styles.cardContent}>
         <View style={styles.iconContainer}>
-          <Ionicons name={icon} size={24} color="#fff" />
+          <Ionicons name={icon} size={28} color="#fff" />
         </View>
         <View style={styles.textContainer}>
           <Text style={styles.title}>{title}</Text>
@@ -57,8 +57,8 @@ export function DashboardCard({
 
 const styles = StyleSheet.create({
   card: {
+    flex: 1,
     borderRadius: 16,
-    marginHorizontal: 4,
     marginVertical: 8,
     elevation: 4,
     shadowColor: '#000',
@@ -71,17 +71,17 @@ const styles = StyleSheet.create({
   },
   gradientContainer: {
     borderRadius: 16,
-    padding: 16,
-    minHeight: 110,
+    padding: 20,
+    minHeight: 130,
   },
   cardContent: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -91,13 +91,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#fff',
-    opacity: 0.9,
-    marginBottom: 4,
+    opacity: 0.95,
+    marginBottom: 6,
+    fontWeight: '600',
   },
   value: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#fff',
   },
