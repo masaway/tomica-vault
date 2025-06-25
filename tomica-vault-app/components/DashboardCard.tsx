@@ -28,14 +28,14 @@ export function DashboardCard({
       end={{ x: 1, y: 1 }}
     >
       <View style={styles.cardContent}>
-        <View style={styles.iconContainer}>
-          <Ionicons name={icon} size={28} color="#fff" />
-        </View>
-        <View style={styles.textContainer}>
-          <Text style={styles.title}>{title}</Text>
+        <Text style={styles.title}>{title}</Text>
+        <View style={styles.iconAndValueContainer}>
+          <View style={styles.iconContainer}>
+            <Ionicons name={icon} size={24} color="#fff" />
+          </View>
           <Text style={styles.value}>{value}</Text>
-          {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
         </View>
+        {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
       </View>
     </LinearGradient>
   );
@@ -75,28 +75,31 @@ const styles = StyleSheet.create({
     height: 140,
   },
   cardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
     height: '100%',
   },
+  iconAndValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flex: 1,
+    marginTop: 8,
+  },
   iconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
-  },
-  textContainer: {
-    flex: 1,
   },
   title: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#fff',
-    opacity: 0.95,
-    marginBottom: 6,
+    opacity: 0.9,
     fontWeight: '600',
+    textAlign: 'center',
   },
   value: {
     fontSize: 28,
