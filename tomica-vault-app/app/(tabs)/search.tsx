@@ -3,47 +3,51 @@ import { StyleSheet, View, Text, TextInput, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NFCShortcut } from '../../components/NFCShortcut';
 import { TomicaItem } from '../../components/TomicaItem';
-
-// 固定のサンプルデータ
-const SAMPLE_DATA = [
-  { 
-    id: 1, 
-    name: 'トヨタ クラウン', 
-    situation: '外出中', 
-    lastUpdatedDate: '2024-03-15',
-    updatedBy: '井上裕樹'
-  },
-  { 
-    id: 2, 
-    name: '日産 スカイライン', 
-    situation: '帰宅中', 
-    lastUpdatedDate: '2024-03-10',
-    updatedBy: '田中太郎'
-  },
-  { 
-    id: 3, 
-    name: 'ホンダ シビック', 
-    situation: '家出中', 
-    lastUpdatedDate: '2024-03-05',
-    updatedBy: '佐藤花子'
-  },
-  { 
-    id: 4, 
-    name: 'スバル インプレッサ', 
-    situation: '外出中', 
-    lastUpdatedDate: '2024-02-28',
-    updatedBy: '鈴木一郎'
-  },
-  { 
-    id: 5, 
-    name: 'マツダ RX-7', 
-    situation: '帰宅中', 
-    lastUpdatedDate: '2024-02-20',
-    updatedBy: '高橋次郎'
-  },
-];
+import { useEffect, useState } from 'react';
+import { useTomica, Tomica } from '@/hooks/useTomica';
 
 export default function SearchScreen() {
+  const { tomicaList, loading, error, searchTomica, fetchTomicaList } = useTomica();
+  const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState(query);
+
+  // 入力後300ms何もなければdebouncedQueryを更新
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedQuery(query), 300);
+    return () => clearTimeout(handler);
+  }, [query]);
+
+  useEffect(() => {
+    if (debouncedQuery.trim() !== '') {
+      searchTomica(debouncedQuery);
+    }
+    // 空欄のときは何もしない
+  }, [debouncedQuery]);
+
+  const determineTomicaSituation = (tomica: Tomica): '外出中' | '帰宅中' => {
+    const { check_in_at, checked_out_at } = tomica;
+    if (check_in_at === null) return '外出中';
+    if (checked_out_at === null) return '帰宅中';
+    const checkedInDate = new Date(check_in_at).getTime();
+    const checkedOutDate = new Date(checked_out_at).getTime();
+    return checkedInDate > checkedOutDate ? '帰宅中' : '外出中';
+  };
+
+  const renderItem = ({ item }: { item: Tomica }) => (
+    <TomicaItem
+      item={{
+        id: item.id,
+        name: item.name,
+        situation: determineTomicaSituation(item),
+        nfc_tag_uid: String(item.nfc_tag_uid),
+        check_in_at: item.check_in_at,
+        checked_out_at: item.checked_out_at,
+        lastUpdatedDate: item.updated_at ?? '',
+        updatedBy: (item as any).updated_by || '',
+      }}
+    />
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -52,16 +56,27 @@ export default function SearchScreen() {
           style={styles.searchInput}
           placeholder="トミカを検索..."
           placeholderTextColor="#999"
+          value={query}
+          onChangeText={setQuery}
         />
       </View>
       <View style={styles.content}>
-        <FlatList
-          data={SAMPLE_DATA}
-          renderItem={({ item }) => (
-            <TomicaItem item={item} />
-          )}
-          keyExtractor={(item) => item.id.toString()}
-        />
+        {loading ? (
+          <Text>読み込み中...</Text>
+        ) : error ? (
+          <Text style={{ color: 'red' }}>{error}</Text>
+        ) : (
+          <FlatList
+            data={debouncedQuery.trim() === '' ? [] : tomicaList}
+            renderItem={renderItem}
+            keyExtractor={(item) => String(item.id)}
+            ListEmptyComponent={
+              debouncedQuery.trim() === ''
+                ? null
+                : <Text style={{ textAlign: 'center', marginTop: 32 }}>該当データがありません</Text>
+            }
+          />
+        )}
       </View>
       <NFCShortcut />
     </SafeAreaView>
