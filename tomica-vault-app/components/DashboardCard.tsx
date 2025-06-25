@@ -95,9 +95,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#fff',
-    opacity: 0.9,
+    opacity: 0.95,
     fontWeight: '600',
     textAlign: 'center',
   },
