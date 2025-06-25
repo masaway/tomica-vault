@@ -152,6 +152,52 @@ export function useTomica() {
     }
   }, [calculateStats]);
 
+  // トミカを更新
+  const updateTomica = async (id: number, updates: {
+    name: string;
+    situation: '外出中' | '帰宅中';
+    notes: string;
+  }) => {
+    try {
+      setLoading(true);
+      const now = new Date().toISOString();
+      const timeUpdates =
+        updates.situation === '帰宅中'
+          ? { check_in_at: now, checked_out_at: null }
+          : { checked_out_at: now, check_in_at: null };
+
+      const { error: updateError } = await supabase
+        .from(TOMICA_TABLE)
+        .update({
+          name: updates.name,
+          memo: updates.notes,
+          ...timeUpdates,
+          updated_at: now,
+        })
+        .eq('id', id);
+
+      if (updateError) throw updateError;
+
+      // 最新データ取得
+      const { data, error: fetchError } = await supabase
+        .from(TOMICA_TABLE)
+        .select('*')
+        .eq('id', id)
+        .single();
+      if (fetchError) throw fetchError;
+
+      setTomicaList((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, ...data } : t))
+      );
+      return data;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'エラーが発生しました');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     tomicaList,
     loading,
@@ -162,5 +208,6 @@ export function useTomica() {
     getTomicaById,
     fetchStats,
     calculateStats,
+    updateTomica,
   };
 } 
