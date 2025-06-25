@@ -1,12 +1,19 @@
 import { View, Text, StyleSheet, TextInput, ScrollView, Pressable, Alert, Image } from 'react-native';
 import { Stack } from 'expo-router';
 import { useState } from 'react';
+import { useThemeColor } from '../../hooks/useThemeColor';
 
 export default function AddScreen() {
   const [formData, setFormData] = useState({
     name: '',
     notes: '',
   });
+
+  const backgroundColor = useThemeColor({}, 'background');
+  const textColor = useThemeColor({}, 'text');
+  const borderColor = useThemeColor({}, 'border');
+  const cardColor = useThemeColor({}, 'card');
+  const tintColor = useThemeColor({}, 'tint');
 
   const handleSubmit = () => {
     // 必須項目のバリデーション
@@ -20,33 +27,50 @@ export default function AddScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { backgroundColor }]}>
       <Stack.Screen options={{ title: '新規登録' }} />
       
       <View style={styles.formGroup}>
-        <Text style={styles.label}>車名 <Text style={styles.required}>*</Text></Text>
+        <Text style={[styles.label, { color: textColor }]}>車名 <Text style={styles.required}>*</Text></Text>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            {
+              borderColor: borderColor,
+              backgroundColor: cardColor,
+              color: textColor,
+            },
+          ]}
           value={formData.name}
           onChangeText={(text) => setFormData({ ...formData, name: text })}
           placeholder="例: トヨタ クラウン"
+          placeholderTextColor={borderColor}
         />
       </View>
 
       <View style={styles.formGroup}>
-        <Text style={styles.label}>メモ</Text>
+        <Text style={[styles.label, { color: textColor }]}>メモ</Text>
         <TextInput
-          style={[styles.input, styles.textArea]}
+          style={[
+            styles.input,
+            styles.textArea,
+            {
+              borderColor: borderColor,
+              backgroundColor: cardColor,
+              color: textColor,
+            },
+          ]}
           value={formData.notes}
           onChangeText={(text) => setFormData({ ...formData, notes: text })}
           placeholder="特記事項があれば入力してください"
+          placeholderTextColor={borderColor}
           multiline
           numberOfLines={4}
           textAlignVertical="top"
         />
       </View>
 
-      <Pressable style={styles.submitButton} onPress={handleSubmit}>
+      <Pressable style={[styles.submitButton, { backgroundColor: tintColor }]} onPress={handleSubmit}>
         <Text style={styles.submitButtonText}>NFCを登録する</Text>
       </Pressable>
     </ScrollView>
@@ -57,7 +81,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#fff',
   },
   imageContainer: {
     alignItems: 'center',
@@ -75,24 +98,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 8,
-    color: '#333',
   },
   required: {
     color: '#FF3B30',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    backgroundColor: '#f9f9f9',
   },
   textArea: {
     height: 100,
   },
   submitButton: {
-    backgroundColor: '#007AFF',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',

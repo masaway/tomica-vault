@@ -1,21 +1,26 @@
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useThemeColor } from '../../hooks/useThemeColor';
 
 export default function SettingsScreen() {
+  const backgroundColor = useThemeColor({}, 'background');
+  const textColor = useThemeColor({}, 'text');
+  const borderColor = useThemeColor({}, 'border');
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>設定</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor }]}>
+      <View style={[styles.header, { borderBottomColor: borderColor }]}>
+        <Text style={[styles.title, { color: textColor }]}>設定</Text>
       </View>
       <View style={styles.content}>
-        <TouchableOpacity style={styles.settingItem}>
-          <Text style={styles.settingText}>プロフィール設定</Text>
+        <TouchableOpacity style={[styles.settingItem, { borderBottomColor: borderColor }]}>
+          <Text style={[styles.settingText, { color: textColor }]}>プロフィール設定</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.settingItem}>
-          <Text style={styles.settingText}>通知設定</Text>
+        <TouchableOpacity style={[styles.settingItem, { borderBottomColor: borderColor }]}>
+          <Text style={[styles.settingText, { color: textColor }]}>通知設定</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.settingItem}>
-          <Text style={styles.settingText}>アプリについて</Text>
+        <TouchableOpacity style={[styles.settingItem, { borderBottomColor: borderColor }]}>
+          <Text style={[styles.settingText, { color: textColor }]}>アプリについて</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -25,12 +30,10 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   header: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   title: {
     fontSize: 24,
@@ -43,7 +46,6 @@ const styles = StyleSheet.create({
   settingItem: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   settingText: {
     fontSize: 16,
