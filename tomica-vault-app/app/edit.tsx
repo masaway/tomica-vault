@@ -90,23 +90,26 @@ export default function EditScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>状況</Text>
             <View style={styles.situationButtons}>
-              {(['外出中', '帰宅中'] as const).map((s) => (
+              {([
+                { value: '外出中', label: '行ってきます' },
+                { value: '帰宅中', label: 'ただいま' }
+              ] as const).map(({ value, label }) => (
                 <TouchableOpacity
-                  key={s}
+                  key={value}
                   style={[
                     styles.situationButton,
-                    situation === s && styles.situationButtonActive,
+                    situation === value && styles.situationButtonActive,
                   ]}
-                  onPress={() => setSituation(s)}
+                  onPress={() => setSituation(value)}
                   disabled={isLoading}
                 >
                   <Text
                     style={[
                       styles.situationButtonText,
-                      situation === s && styles.situationButtonTextActive,
+                      situation === value && styles.situationButtonTextActive,
                     ]}
                   >
-                    {s}
+                    {label}
                   </Text>
                 </TouchableOpacity>
               ))}
