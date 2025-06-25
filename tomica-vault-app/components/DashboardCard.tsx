@@ -72,11 +72,12 @@ const styles = StyleSheet.create({
   gradientContainer: {
     borderRadius: 16,
     padding: 20,
-    minHeight: 130,
+    height: 140,
   },
   cardContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    height: '100%',
   },
   iconContainer: {
     width: 56,
