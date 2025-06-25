@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { useTomica, Tomica } from '@/hooks/useTomica';
 import { useThemeColor } from '../../hooks/useThemeColor';
 import type { Situation } from './list';
+import { situationOrder } from './list';
 
 export default function SearchScreen() {
   const { tomicaList, loading, error, searchTomica, fetchTomicaList } = useTomica();
@@ -71,6 +72,13 @@ export default function SearchScreen() {
     />
   );
 
+  // 家出中→外出中→帰宅中の順にソート
+  const sortedTomicaList = [...tomicaList].sort((a, b) => {
+    const situationA = determineTomicaSituation(a);
+    const situationB = determineTomicaSituation(b);
+    return situationOrder[situationA] - situationOrder[situationB];
+  });
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor }]}>
       <View style={[styles.header, { borderBottomColor: borderColor }]}>
@@ -95,7 +103,7 @@ export default function SearchScreen() {
           <Text style={{ color: 'red' }}>{error}</Text>
         ) : (
           <FlatList
-            data={debouncedQuery.trim() === '' ? [] : tomicaList}
+            data={debouncedQuery.trim() === '' ? [] : sortedTomicaList}
             renderItem={renderItem}
             keyExtractor={(item) => String(item.id)}
             ListEmptyComponent={
