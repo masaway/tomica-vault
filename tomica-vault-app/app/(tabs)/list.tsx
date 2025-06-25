@@ -42,7 +42,7 @@ const determineTomicaSituation = (tomica: Tomica): Situation => {
 };
 
 // 状態の表示順を定義
-const situationOrder: Record<Situation, number> = {
+export const situationOrder: Record<Situation, number> = {
   '家出中': 0,
   '外出中': 1,
   '帰宅中': 2,

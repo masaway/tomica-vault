@@ -1,11 +1,13 @@
 // app/(tabs)/search.tsx
-import { StyleSheet, View, Text, TextInput, FlatList } from 'react-native';
+import { StyleSheet, View, Text, TextInput, FlatList, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NFCShortcut } from '../../components/NFCShortcut';
 import { TomicaItem } from '../../components/TomicaItem';
 import { useEffect, useState } from 'react';
 import { useTomica, Tomica } from '@/hooks/useTomica';
 import { useThemeColor } from '../../hooks/useThemeColor';
+import type { Situation } from './list';
+import { situationOrder } from './list';
 
 export default function SearchScreen() {
   const { tomicaList, loading, error, searchTomica, fetchTomicaList } = useTomica();
@@ -13,8 +15,8 @@ export default function SearchScreen() {
   const [debouncedQuery, setDebouncedQuery] = useState(query);
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
-  const borderColor = useThemeColor({}, 'border');
-  const cardColor = useThemeColor({}, 'card');
+  const borderColor = useThemeColor({}, 'icon');
+  const cardColor = useThemeColor({}, 'cardBackground');
 
   // 入力後300ms何もなければdebouncedQueryを更新
   useEffect(() => {
@@ -29,13 +31,30 @@ export default function SearchScreen() {
     // 空欄のときは何もしない
   }, [debouncedQuery]);
 
-  const determineTomicaSituation = (tomica: Tomica): '外出中' | '帰宅中' => {
+  const determineTomicaSituation = (tomica: Tomica): Situation => {
     const { check_in_at, checked_out_at } = tomica;
-    if (check_in_at === null) return '外出中';
+    if (check_in_at === null) {
+      if (checked_out_at) {
+        const checkedOutDate = new Date(checked_out_at).getTime();
+        const now = Date.now();
+        if (now - checkedOutDate >= 48 * 60 * 60 * 1000) {
+          return '家出中';
+        }
+      }
+      return '外出中';
+    }
     if (checked_out_at === null) return '帰宅中';
     const checkedInDate = new Date(check_in_at).getTime();
     const checkedOutDate = new Date(checked_out_at).getTime();
-    return checkedInDate > checkedOutDate ? '帰宅中' : '外出中';
+    if (checkedInDate > checkedOutDate) {
+      return '帰宅中';
+    } else {
+      const now = Date.now();
+      if (now - checkedOutDate >= 48 * 60 * 60 * 1000) {
+        return '家出中';
+      }
+      return '外出中';
+    }
   };
 
   const renderItem = ({ item }: { item: Tomica }) => (
@@ -43,8 +62,8 @@ export default function SearchScreen() {
       item={{
         id: item.id,
         name: item.name,
-        situation: determineTomicaSituation(item),
-        nfc_tag_uid: String(item.nfc_tag_uid),
+        situation: determineTomicaSituation(item) as Situation,
+        nfc_tag_uid: item.nfc_tag_uid,
         check_in_at: item.check_in_at,
         checked_out_at: item.checked_out_at,
         lastUpdatedDate: item.updated_at ?? '',
@@ -53,31 +72,50 @@ export default function SearchScreen() {
     />
   );
 
+  // 家出中→外出中→帰宅中の順にソート
+  const sortedTomicaList = [...tomicaList].sort((a, b) => {
+    const situationA = determineTomicaSituation(a);
+    const situationB = determineTomicaSituation(b);
+    return situationOrder[situationA] - situationOrder[situationB];
+  });
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor }]}>
       <View style={[styles.header, { borderBottomColor: borderColor }]}>
         <Text style={[styles.title, { color: textColor }]}>検索</Text>
-        <TextInput
-          style={[
-            styles.searchInput,
-            {
-              borderColor: borderColor,
-              backgroundColor: cardColor,
-              color: textColor,
-            },
-          ]}
-          placeholder="トミカを検索..."
-          placeholderTextColor={borderColor}
-          value={query}
-          onChangeText={setQuery}
-        />
+        <View style={{ position: 'relative', justifyContent: 'center' }}>
+          <TextInput
+            style={[
+              styles.searchInput,
+              {
+                borderColor: borderColor,
+                backgroundColor: cardColor,
+                color: textColor,
+                paddingRight: 36,
+              },
+            ]}
+            placeholder="トミカを検索..."
+            placeholderTextColor={borderColor}
+            value={query}
+            onChangeText={setQuery}
+          />
+          {query.length > 0 && (
+            <TouchableOpacity
+              style={{ position: 'absolute', right: 8, top: 0, bottom: 0, justifyContent: 'center' }}
+              onPress={() => setQuery('')}
+              accessibilityLabel="検索クリア"
+            >
+              <Text style={{ fontSize: 20, color: borderColor }}>×</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
       <View style={styles.content}>
         {error ? (
           <Text style={{ color: 'red' }}>{error}</Text>
         ) : (
           <FlatList
-            data={debouncedQuery.trim() === '' ? [] : tomicaList}
+            data={debouncedQuery.trim() === '' ? [] : sortedTomicaList}
             renderItem={renderItem}
             keyExtractor={(item) => String(item.id)}
             ListEmptyComponent={
