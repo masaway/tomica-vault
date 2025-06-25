@@ -3,10 +3,25 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTomica } from '../../hooks/useTomica';
 import { Image } from 'expo-image';
 import { NFCShortcut } from '../../components/NFCShortcut';
+import { TomicaItem } from '../../components/TomicaItem';
 
 export default function HomeScreen() {
   const { tomicaList, loading, error } = useTomica();
 
+  const renderItem = ({ item }: { item: Tomica }) => (
+    <TomicaItem
+      item={{
+        id: item.id,
+        name: item.name,
+        situation: determineTomicaSituation(item),
+        nfc_tag_uid: String(item.nfc_tag_uid),
+        check_in_at: item.check_in_at,
+        checked_out_at: item.checked_out_at,
+        lastUpdatedDate: item.updated_at ?? '',
+        updatedBy: (item as any).updated_by || '',
+      }}
+    />
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -14,6 +29,11 @@ export default function HomeScreen() {
         <Text style={styles.title}>トミカコレクション</Text>
       </View>
       <NFCShortcut />
+      <FlatList
+        data={tomicaList}
+        renderItem={renderItem}
+        keyExtractor={(item) => String(item.id)}
+      />
     </SafeAreaView>
   );
 }
