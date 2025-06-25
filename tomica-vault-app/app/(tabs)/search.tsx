@@ -5,11 +5,16 @@ import { NFCShortcut } from '../../components/NFCShortcut';
 import { TomicaItem } from '../../components/TomicaItem';
 import { useEffect, useState } from 'react';
 import { useTomica, Tomica } from '@/hooks/useTomica';
+import { useThemeColor } from '../../hooks/useThemeColor';
 
 export default function SearchScreen() {
   const { tomicaList, loading, error, searchTomica, fetchTomicaList } = useTomica();
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState(query);
+  const backgroundColor = useThemeColor({}, 'background');
+  const textColor = useThemeColor({}, 'text');
+  const borderColor = useThemeColor({}, 'border');
+  const cardColor = useThemeColor({}, 'card');
 
   // 入力後300ms何もなければdebouncedQueryを更新
   useEffect(() => {
@@ -49,13 +54,20 @@ export default function SearchScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>検索</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor }]}>
+      <View style={[styles.header, { borderBottomColor: borderColor }]}>
+        <Text style={[styles.title, { color: textColor }]}>検索</Text>
         <TextInput
-          style={styles.searchInput}
+          style={[
+            styles.searchInput,
+            {
+              borderColor: borderColor,
+              backgroundColor: cardColor,
+              color: textColor,
+            },
+          ]}
           placeholder="トミカを検索..."
-          placeholderTextColor="#999"
+          placeholderTextColor={borderColor}
           value={query}
           onChangeText={setQuery}
         />
@@ -86,12 +98,10 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   header: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   title: {
     fontSize: 24,
@@ -101,10 +111,8 @@ const styles = StyleSheet.create({
   searchInput: {
     height: 40,
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 8,
     paddingHorizontal: 16,
-    backgroundColor: '#f5f5f5',
   },
   content: {
     flex: 1,

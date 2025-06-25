@@ -2,9 +2,11 @@ import { Tabs } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 import { Alert, Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useThemeColor } from '../../hooks/useThemeColor';
 
 export default function TabLayout() {
   const router = useRouter();
+  const tintColor = useThemeColor({}, 'tint');
 
   const handleAddPress = () => {
     Alert.alert(
@@ -26,12 +28,13 @@ export default function TabLayout() {
 
   return (
     <Tabs screenOptions={{
-      tabBarActiveTintColor: '#007AFF',
+      tabBarActiveTintColor: tintColor,
     }}>
       <Tabs.Screen
         name="index"
         options={{
           title: 'ホーム',
+          headerShown: false,
           tabBarIcon: ({ color }) => <FontAwesome name="home" size={24} color={color} />,
         }}
       />
@@ -59,10 +62,10 @@ export default function TabLayout() {
               <FontAwesome
                 name="plus-circle"
                 size={32}
-                color="#007AFF"
+                color={tintColor}
                 style={{ marginBottom: 2 }}
               />
-              <Text style={{ fontSize: 10, color: '#007AFF' }}>新規登録</Text>
+              <Text style={{ fontSize: 10, color: tintColor }}>新規登録</Text>
             </Pressable>
           ),
         }}

@@ -1,5 +1,6 @@
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
+import { useThemeColor } from '../hooks/useThemeColor';
 
 type Tomica = {
   id: number;
@@ -18,6 +19,10 @@ type TomicaItemProps = {
 };
 
 export function TomicaItem({ item, onPress }: TomicaItemProps) {
+  const textColor = useThemeColor({}, 'text');
+  const borderColor = useThemeColor({}, 'border');
+  const mutedColor = useThemeColor({ light: '#666', dark: '#999' }, 'text');
+
   const getSituationStyle = (situation: string) => {
     switch (situation) {
       case '外出中':
@@ -53,10 +58,10 @@ export function TomicaItem({ item, onPress }: TomicaItemProps) {
 
   return (
     <TouchableOpacity 
-      style={styles.item}
+      style={[styles.item, { borderBottomColor: borderColor }]}
       onPress={handlePress}
     >
-      <Text style={styles.itemName}>{item.name}</Text>
+      <Text style={[styles.itemName, { color: textColor }]}>{item.name}</Text>
       <View style={styles.situationContainer}>
         <Text style={[
           styles.situation,
@@ -65,11 +70,11 @@ export function TomicaItem({ item, onPress }: TomicaItemProps) {
           {item.situation}
         </Text>
       </View>
-      <Text style={styles.updateInfo}>
+      <Text style={[styles.updateInfo, { color: mutedColor }]}>
         最終更新: {formatDate(item.lastUpdatedDate)}
       </Text>
       {item.updatedBy && (
-        <Text style={styles.updateInfo}>
+        <Text style={[styles.updateInfo, { color: mutedColor }]}>
           更新者: {item.updatedBy}
         </Text>
       )}
@@ -81,7 +86,6 @@ const styles = StyleSheet.create({
   item: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   itemName: {
     fontSize: 16,
@@ -113,7 +117,6 @@ const styles = StyleSheet.create({
   },
   updateInfo: {
     fontSize: 14,
-    color: '#666',
     marginTop: 4,
   },
 }); 
