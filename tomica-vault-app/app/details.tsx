@@ -4,21 +4,36 @@ import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { useTomica, Tomica } from '@/hooks/useTomica';
-
-// 型定義
-type Situation = '外出中' | '帰宅中';
+import type { Situation } from './(tabs)/list';
 
 // トミカの状態を判断する関数
 const determineTomicaSituation = (tomica: Tomica): Situation => {
   const { check_in_at, checked_out_at } = tomica;
 
-  if (check_in_at === null) return '外出中';
+  if (check_in_at === null) {
+    if (checked_out_at) {
+      const checkedOutDate = new Date(checked_out_at).getTime();
+      const now = Date.now();
+      if (now - checkedOutDate >= 48 * 60 * 60 * 1000) {
+        return '家出中';
+      }
+    }
+    return '外出中';
+  }
   if (checked_out_at === null) return '帰宅中';
 
   const checkedInDate = new Date(check_in_at).getTime();
   const checkedOutDate = new Date(checked_out_at).getTime();
 
-  return checkedInDate > checkedOutDate ? '帰宅中' : '外出中';
+  if (checkedInDate > checkedOutDate) {
+    return '帰宅中';
+  } else {
+    const now = Date.now();
+    if (now - checkedOutDate >= 48 * 60 * 60 * 1000) {
+      return '家出中';
+    }
+    return '外出中';
+  }
 };
 
 // 日付を日本語形式でフォーマットする関数
@@ -29,7 +44,19 @@ const formatDate = (dateString: string): string => {
 // 基本情報セクション
 const BasicInfoSection = ({ tomica }: { tomica: Tomica }) => {
   const situation = determineTomicaSituation(tomica);
-  const situationStyle = situation === '外出中' ? styles.situationOut : styles.situationReturning;
+  let situationStyle;
+  switch (situation) {
+    case '外出中':
+      situationStyle = styles.situationOut;
+      break;
+    case '家出中':
+      situationStyle = styles.situationMissing;
+      break;
+    case '帰宅中':
+    default:
+      situationStyle = styles.situationReturning;
+      break;
+  }
 
   return (
     <View style={styles.section}>
@@ -71,7 +98,7 @@ const MovementHistorySection = ({ tomica }: { tomica: Tomica }) => {
         <View style={styles.historyItem}>
           <Text style={styles.historyDate}>{latestCheckIn.toLocaleString('ja-JP')}</Text>
           <Text style={styles.historyText}>帰宅中に変更</Text>
-          <Text style={styles.historyUser}>更新者: {tomica.updated_by}</Text>
+          <Text style={styles.historyUser}>更新者: {''}</Text>
         </View>
       )}
 
@@ -80,7 +107,7 @@ const MovementHistorySection = ({ tomica }: { tomica: Tomica }) => {
         <View style={styles.historyItem}>
           <Text style={styles.historyDate}>{latestCheckOut.toLocaleString('ja-JP')}</Text>
           <Text style={styles.historyText}>外出中に変更</Text>
-          <Text style={styles.historyUser}>更新者: {tomica.updated_by}</Text>
+          <Text style={styles.historyUser}>更新者: {''}</Text>
         </View>
       )}
     </View>
@@ -273,12 +300,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   situationOut: {
-    color: '#e65100',
+    backgroundColor: '#fff3e0', // 薄いオレンジ
+    color: '#ff9800',           // オレンジ
     fontWeight: 'bold',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
   },
   situationReturning: {
     color: '#2e7d32',
     fontWeight: 'bold',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+  },
+  situationMissing: {
+    backgroundColor: '#ffebee', // 薄い赤
+    color: '#d32f2f',           // 赤
+    fontWeight: 'bold',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
   },
   historyItem: {
     marginBottom: 16,
