@@ -8,25 +8,44 @@ import { useThemeColor } from '../../hooks/useThemeColor';
 import { useFocusEffect } from '@react-navigation/native';
 import React from 'react';
 
+// 状態の型を共通化
+export type Situation = '家出中' | '外出中' | '帰宅中';
+
 // トミカの状態を判断する関数
-const determineTomicaSituation = (tomica: Tomica): '外出中' | '帰宅中' => {
+const determineTomicaSituation = (tomica: Tomica): Situation => {
   const { check_in_at, checked_out_at } = tomica;
 
-  // check_in_atがnullなら外出中
   if (check_in_at === null) {
+    if (checked_out_at) {
+      const checkedOutDate = new Date(checked_out_at).getTime();
+      const now = Date.now();
+      if (now - checkedOutDate >= 48 * 60 * 60 * 1000) {
+        return '家出中';
+      }
+    }
     return '外出中';
   }
+  if (checked_out_at === null) return '帰宅中';
 
-  // checked_out_atがnullなら帰宅中
-  if (checked_out_at === null) {
-    return '帰宅中';
-  }
-
-  // 両方の値が存在する場合、日付を比較
   const checkedInDate = new Date(check_in_at).getTime();
   const checkedOutDate = new Date(checked_out_at).getTime();
 
-  return checkedInDate > checkedOutDate ? '帰宅中' : '外出中';
+  if (checkedInDate > checkedOutDate) {
+    return '帰宅中';
+  } else {
+    const now = Date.now();
+    if (now - checkedOutDate >= 48 * 60 * 60 * 1000) {
+      return '家出中';
+    }
+    return '外出中';
+  }
+};
+
+// 状態の表示順を定義
+const situationOrder: Record<Situation, number> = {
+  '家出中': 0,
+  '外出中': 1,
+  '帰宅中': 2,
 };
 
 export default function ListScreen() {
@@ -34,7 +53,7 @@ export default function ListScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
-  const borderColor = useThemeColor({}, 'border');
+  const borderColor = useThemeColor({}, 'icon');
 
   // 画面フォーカス時に最新リスト取得
   useFocusEffect(
@@ -59,6 +78,13 @@ export default function ListScreen() {
     <TomicaItem item={toTomicaItemProps(item)} />
   );
 
+  // 家出中→外出中→帰宅中の順にソート
+  const sortedTomicaList = [...tomicaList].sort((a, b) => {
+    const situationA = determineTomicaSituation(a);
+    const situationB = determineTomicaSituation(b);
+    return situationOrder[situationA] - situationOrder[situationB];
+  });
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor }]}>
       <View style={[styles.header, { borderBottomColor: borderColor }]}>
@@ -74,7 +100,7 @@ export default function ListScreen() {
         </View>
       ) : (
         <FlatList
-          data={tomicaList}
+          data={sortedTomicaList}
           renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.list}

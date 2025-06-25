@@ -73,9 +73,7 @@ export default function SearchScreen() {
         />
       </View>
       <View style={styles.content}>
-        {loading ? (
-          <Text>読み込み中...</Text>
-        ) : error ? (
+        {error ? (
           <Text style={{ color: 'red' }}>{error}</Text>
         ) : (
           <FlatList

@@ -170,7 +170,8 @@ export function useTomica() {
       setLoading(true);
       setError(null);
       try {
-        const now = new Date().toISOString();
+        // JSTで保存
+        const now = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().replace('Z', '+09:00');
         const timeUpdates =
           updates.situation === '帰宅中'
             ? { check_in_at: now, checked_out_at: null }
