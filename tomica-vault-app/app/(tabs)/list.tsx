@@ -5,6 +5,8 @@ import { NFCShortcut } from '../../components/NFCShortcut';
 import { useTomica, Tomica } from '@/hooks/useTomica';
 import { TomicaItem } from '../../components/TomicaItem';
 import { useThemeColor } from '../../hooks/useThemeColor';
+import { useFocusEffect } from '@react-navigation/native';
+import React from 'react';
 
 // トミカの状態を判断する関数
 const determineTomicaSituation = (tomica: Tomica): '外出中' | '帰宅中' => {
@@ -34,29 +36,27 @@ export default function ListScreen() {
   const textColor = useThemeColor({}, 'text');
   const borderColor = useThemeColor({}, 'border');
 
-  useEffect(() => {
-    fetchTomicaList();
-  }, []);
+  // 画面フォーカス時に最新リスト取得
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchTomicaList();
+    }, [])
+  );
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await fetchTomicaList();
-    setRefreshing(false);
-  };
+  // TomicaItem用のitem生成
+  const toTomicaItemProps = (item: Tomica) => ({
+    id: item.id,
+    name: item.name,
+    situation: determineTomicaSituation(item),
+    nfc_tag_uid: item.nfc_tag_uid,
+    check_in_at: item.check_in_at,
+    checked_out_at: item.checked_out_at,
+    lastUpdatedDate: item.updated_at ? item.updated_at : '',
+    updatedBy: '' // DBにないので空文字
+  });
 
   const renderItem = ({ item }: { item: Tomica }) => (
-    <TomicaItem
-      item={{
-        id: item.id,
-        name: item.name,
-        situation: determineTomicaSituation(item),
-        nfc_tag_uid: item.nfc_tag_uid,
-        check_in_at: item.check_in_at,
-        checked_out_at: item.checked_out_at,
-        lastUpdatedDate: item.updated_at,
-        updatedBy: item.updated_by
-      }}
-    />
+    <TomicaItem item={toTomicaItemProps(item)} />
   );
 
   return (
@@ -78,8 +78,6 @@ export default function ListScreen() {
           renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.list}
-          refreshing={refreshing}
-          onRefresh={onRefresh}
         />
       )}
       <NFCShortcut />
