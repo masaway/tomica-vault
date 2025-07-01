@@ -10,7 +10,7 @@ export interface TomicaStats {
   checkedIn: number;
   recentActivity: {
     name: string;
-    action: 'チェックイン' | 'チェックアウト';
+    action: 'チェックイン' | 'チェックアウト' | '家出中';
     timestamp: string;
   }[];
 }
@@ -93,8 +93,40 @@ export function useTomica() {
 
     tomicaData.forEach(tomica => {
       const { check_in_at, checked_out_at } = tomica;
-      
-      // チェック状態を判定
+
+      // 家出中判定
+      let isMissing = false;
+      let missingTimestamp: string | null = null;
+
+      if (check_in_at === null && checked_out_at) {
+        const checkedOutDate = new Date(checked_out_at).getTime();
+        const now = Date.now();
+        if (now - checkedOutDate >= 48 * 60 * 60 * 1000) {
+          isMissing = true;
+          // 家出中になったタイミング = checked_out_at + 48h
+          missingTimestamp = new Date(checkedOutDate + 48 * 60 * 60 * 1000).toISOString();
+        }
+      } else if (check_in_at && checked_out_at) {
+        const checkedInDate = new Date(check_in_at).getTime();
+        const checkedOutDate = new Date(checked_out_at).getTime();
+        if (checkedInDate < checkedOutDate) {
+          const now = Date.now();
+          if (now - checkedOutDate >= 48 * 60 * 60 * 1000) {
+            isMissing = true;
+            missingTimestamp = new Date(checkedOutDate + 48 * 60 * 60 * 1000).toISOString();
+          }
+        }
+      }
+
+      if (isMissing && missingTimestamp) {
+        recentActivity.push({
+          name: tomica.name,
+          action: '家出中',
+          timestamp: missingTimestamp,
+        });
+      }
+
+      // 既存の集計
       if (check_in_at === null) {
         checkedOut++;
       } else if (checked_out_at === null) {
@@ -108,32 +140,16 @@ export function useTomica() {
           checkedOut++;
         }
       }
-
-      // 最近のアクティビティを追加
-      if (check_in_at) {
-        recentActivity.push({
-          name: tomica.name,
-          action: 'チェックイン',
-          timestamp: check_in_at
-        });
-      }
-      if (checked_out_at) {
-        recentActivity.push({
-          name: tomica.name,
-          action: 'チェックアウト',
-          timestamp: checked_out_at
-        });
-      }
     });
 
-    // 最近のアクティビティを時間順でソート（最新5件）
+    // 家出中通知のみ最新5件
     recentActivity.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-    
+
     return {
       total,
       checkedOut,
       checkedIn,
-      recentActivity: recentActivity.slice(0, 5)
+      recentActivity: recentActivity.slice(0, 5),
     };
   }, []);
 
