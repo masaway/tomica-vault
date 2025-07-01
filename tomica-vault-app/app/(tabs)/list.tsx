@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, FlatList } from 'react-native';
+import { StyleSheet, View, Text, FlatList, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
 import { NFCShortcut } from '../../components/NFCShortcut';
@@ -51,6 +51,7 @@ export const situationOrder: Record<Situation, number> = {
 export default function ListScreen() {
   const { tomicaList, loading, error, fetchTomicaList } = useTomica();
   const [refreshing, setRefreshing] = useState(false);
+  const [filter, setFilter] = useState<'all' | '帰宅中' | '外出中'>('all');
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const borderColor = useThemeColor({}, 'icon');
@@ -78,18 +79,40 @@ export default function ListScreen() {
     <TomicaItem item={toTomicaItemProps(item)} />
   );
 
-  // 家出中→外出中→帰宅中の順にソート
-  const sortedTomicaList = [...tomicaList].sort((a, b) => {
-    const situationA = determineTomicaSituation(a);
-    const situationB = determineTomicaSituation(b);
-    return situationOrder[situationA] - situationOrder[situationB];
+  // フィルタ適用
+  const filteredList = tomicaList.filter(item => {
+    if (filter === 'all') return true;
+    if (filter === '外出中') {
+      // 外出中と家出中の両方を含める
+      const situation = determineTomicaSituation(item);
+      return situation === '外出中' || situation === '家出中';
+    }
+    return determineTomicaSituation(item) === filter;
   });
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor }]}>
-      <View style={[styles.header, { borderBottomColor: borderColor }]}>
-        <Text style={[styles.title, { color: textColor }]}>トミカ一覧</Text>
+      {/* フィルタカード */}
+      <View style={styles.filterRow}>
+        {['all', '帰宅中', '外出中'].map((key) => (
+          <TouchableOpacity
+            key={key}
+            style={[
+              styles.filterCard,
+              filter === key && styles.filterCardActive
+            ]}
+            onPress={() => setFilter(key as typeof filter)}
+          >
+            <Text style={[
+              styles.filterCardText,
+              filter === key && styles.filterCardTextActive
+            ]}>
+              {key === 'all' ? 'すべて' : key}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
+      {/* リスト本体 */}
       {loading ? (
         <View style={styles.center}>
           <Text style={{ color: textColor }}>読み込み中...</Text>
@@ -100,7 +123,11 @@ export default function ListScreen() {
         </View>
       ) : (
         <FlatList
-          data={sortedTomicaList}
+          data={filteredList.sort((a, b) => {
+            const situationA = determineTomicaSituation(a);
+            const situationB = determineTomicaSituation(b);
+            return situationOrder[situationA] - situationOrder[situationB];
+          })}
           renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.list}
@@ -133,5 +160,31 @@ const styles = StyleSheet.create({
   },
   error: {
     color: 'red',
+  },
+  filterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 16,
+    marginBottom: 8,
+    paddingHorizontal: 8,
+  },
+  filterCard: {
+    flex: 1,
+    marginHorizontal: 4,
+    paddingVertical: 12,
+    backgroundColor: '#eee',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  filterCardActive: {
+    backgroundColor: '#4A90E2',
+  },
+  filterCardText: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: 'bold',
+  },
+  filterCardTextActive: {
+    color: '#fff',
   },
 }); 

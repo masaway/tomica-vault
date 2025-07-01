@@ -1,4 +1,5 @@
-import { StyleSheet, View, Text, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
+import React from 'react';
+import { StyleSheet, View, Text, ScrollView, ActivityIndicator, RefreshControl, Modal, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
@@ -9,6 +10,8 @@ import { RecentActivity } from '../../components/RecentActivity';
 import { QuickActions } from '../../components/QuickActions';
 import { useThemeColor } from '../../hooks/useThemeColor';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function HomeScreen() {
   const { stats, loading, error, fetchStats } = useTomica();
@@ -18,10 +21,19 @@ export default function HomeScreen() {
   const tintColor = useThemeColor({}, 'tint');
   const gradientStart = useThemeColor({}, 'gradientStart');
   const gradientEnd = useThemeColor({}, 'gradientEnd');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [lastRead, setLastRead] = useState<string | null>(null);
 
   useEffect(() => {
     fetchStats();
   }, [fetchStats]);
+
+  useEffect(() => {
+    (async () => {
+      const stored = await AsyncStorage.getItem('notification_last_read');
+      if (stored) setLastRead(stored);
+    })();
+  }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -31,6 +43,19 @@ export default function HomeScreen() {
 
   const navigateToList = () => {
     router.push('/(tabs)/list');
+  };
+
+  const unreadCount = stats && lastRead
+    ? stats.recentActivity.filter(a => new Date(a.timestamp) > new Date(lastRead)).length
+    : stats?.recentActivity.length || 0;
+
+  const handleOpenModal = async () => {
+    if (stats && stats.recentActivity.length > 0) {
+      const latest = stats.recentActivity[0].timestamp;
+      await AsyncStorage.setItem('notification_last_read', latest);
+      setLastRead(latest);
+    }
+    setModalVisible(true);
   };
 
   if (loading && !refreshing) {
@@ -62,7 +87,21 @@ export default function HomeScreen() {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <Text style={styles.title}>トミカコレクション</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={styles.title}>トミカコレクション</Text>
+          <TouchableOpacity
+            style={{ marginLeft: 8, position: 'absolute', right: 0 }}
+            onPress={handleOpenModal}
+            accessibilityLabel="通知"
+          >
+            <Ionicons name="notifications-outline" size={28} color="#fff" />
+            {unreadCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{unreadCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
         <Text style={styles.subtitle}>あなたのトミカワールド</Text>
       </LinearGradient>
 
@@ -118,6 +157,48 @@ export default function HomeScreen() {
       </ScrollView>
 
       <NFCShortcut />
+
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>通知</Text>
+              <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <Ionicons name="close" size={28} color={tintColor} />
+              </TouchableOpacity>
+            </View>
+            {stats && stats.recentActivity.length > 0 ? (
+              <ScrollView style={{ maxHeight: 350 }}>
+                {stats.recentActivity.map((item, idx) => (
+                  <View key={idx} style={styles.notificationCard}>
+                    <View style={styles.notificationIconWrap}>
+                      <Ionicons name="alert-circle" size={28} color="#e74c3c" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.notificationTitle}>
+                        {item.name} が <Text style={{ color: '#e74c3c', fontWeight: 'bold' }}>家出中</Text> になりました
+                      </Text>
+                      <Text style={styles.notificationDate}>
+                        {new Date(item.timestamp).toLocaleString('ja-JP')}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+            ) : (
+              <View style={styles.emptyNotification}>
+                <Ionicons name="notifications-off" size={48} color="#ccc" style={{ marginBottom: 8 }} />
+                <Text style={{ color: '#888' }}>家出中の通知はありません</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -189,5 +270,88 @@ const styles = StyleSheet.create({
     color: 'red',
     textAlign: 'center',
     fontSize: 16,
+  },
+  badge: {
+    backgroundColor: 'red',
+    borderRadius: 12,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 20,
+    width: '80%',
+    maxHeight: '80%',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#222',
+  },
+  notificationCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  notificationIconWrap: {
+    marginRight: 12,
+    backgroundColor: '#fdecea',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notificationTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#222',
+    marginBottom: 2,
+  },
+  notificationDate: {
+    fontSize: 12,
+    color: '#888',
+  },
+  emptyNotification: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
   },
 });
