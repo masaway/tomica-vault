@@ -81,34 +81,17 @@ export default function SearchScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor }]}>
-      <View style={[styles.header, { borderBottomColor: borderColor }]}>
-        <Text style={[styles.title, { color: textColor }]}>検索</Text>
-        <View style={{ position: 'relative', justifyContent: 'center' }}>
-          <TextInput
-            style={[
-              styles.searchInput,
-              {
-                borderColor: borderColor,
-                backgroundColor: cardColor,
-                color: textColor,
-                paddingRight: 36,
-              },
-            ]}
-            placeholder="トミカを検索..."
-            placeholderTextColor={borderColor}
-            value={query}
-            onChangeText={setQuery}
-          />
-          {query.length > 0 && (
-            <TouchableOpacity
-              style={{ position: 'absolute', right: 8, top: 0, bottom: 0, justifyContent: 'center' }}
-              onPress={() => setQuery('')}
-              accessibilityLabel="検索クリア"
-            >
-              <Text style={{ fontSize: 20, color: borderColor }}>×</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+      <View style={styles.header}>
+        <TextInput
+          style={[
+            styles.input,
+            { borderColor: borderColor, backgroundColor: cardColor, color: textColor },
+          ]}
+          value={query}
+          onChangeText={setQuery}
+          placeholder="トミカ名で検索"
+          placeholderTextColor={borderColor}
+        />
       </View>
       <View style={styles.content}>
         {error ? (
@@ -139,12 +122,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  searchInput: {
+  input: {
     height: 40,
     borderWidth: 1,
     borderRadius: 8,
