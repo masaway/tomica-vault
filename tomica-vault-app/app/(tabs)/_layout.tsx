@@ -73,7 +73,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="list"
         options={{
-          title: '一覧',
+          title: 'トミカ一覧',
           tabBarIcon: ({ color }) => <FontAwesome name="list" size={24} color={color} />,
         }}
       />
