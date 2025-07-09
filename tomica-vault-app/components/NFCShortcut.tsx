@@ -3,10 +3,14 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 export function NFCShortcut() {
+  const handleNFCPress = () => {
+    router.push('/nfc-reader');
+  };
+
   return (
     <TouchableOpacity 
       style={styles.nfcButton}
-      onPress={() => router.push('/nfc-reader')}
+      onPress={handleNFCPress}
     >
       <Ionicons name="scan" size={24} color="#fff" />
       <Text style={styles.nfcButtonText}>NFC</Text>
@@ -34,10 +38,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
+  nfcButtonDisabled: {
+    backgroundColor: '#ccc',
+    elevation: 2,
+    shadowOpacity: 0.1,
+  },
   nfcButtonText: {
     color: '#fff',
     fontSize: 12,
     fontWeight: 'bold',
     marginTop: 4,
+  },
+  nfcButtonTextDisabled: {
+    color: '#999',
   },
 }); 
