@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "tomica-vault-app",
+    "name": "トミカボルト",
     "slug": "tomica-vault-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -16,7 +16,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "package": "com.masaway2525.tomicavaultapp"
     },
     "web": {
       "bundler": "metro",
@@ -33,10 +33,32 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      [
+        "react-native-nfc-manager",
+        {
+          "nfcPermission": "この機能を使用するためにNFCアクセスが必要です",
+          "selectIdentifiers": [
+            "A0000002471001"
+          ],
+          "systemCodeForAndroid": [
+            "8008"
+          ]
+        }
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "2cd809a6-7f93-4d86-a4e1-92fa70e1a1dc"
+      },
+      "supabaseUrl": "https://dacspxbsjipzwebnrzcy.supabase.co",
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhY3NweGJzamlwendlYm5yemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY5NzIzNTQsImV4cCI6MjA2MjU0ODM1NH0.I8MRfEZd3d1IUvq8sUdQ3-YzYp1U4cSlEfMBgKGcB3E"
+    },
+    "owner": "masaway2525"
   }
 }
