@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "15e50356-5c96-4f04-9ce4-b54faf69584a"
+      }
+    },
+    "android": {
+      "package": "com.masaway2525.tomicavault"
+    }
+  }
+}
