@@ -16,6 +16,7 @@ expo-env.d.ts
 *.p12
 *.key
 *.mobileprovision
+debug.keystore
 
 # Metro
 .metro-health-check*
@@ -37,3 +38,21 @@ yarn-error.*
 
 # devcontainer
 .devcontainer/.env
+
+# build artifacts
+build-*.apk
+*.apk
+
+# Android build artifacts
+android/app/build/
+android/build/
+android/.gradle/
+**/android/**/build/
+**/android/.gradle/
+
+# Credentials and secrets
+credentials.json
+.easrc
+.env
+.env.local
+.env.*.local

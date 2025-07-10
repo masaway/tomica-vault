@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# 最新のビルドを確認し、既存のアプリをアンインストールして、最新ビルドをインストールするスクリプト
+
+set -e
+
+echo "🔍 最新のビルドを確認中..."
+
+# tomica-vault-appディレクトリに移動
+cd /home/yoshiaki/work/tomica-vault/tomica-vault-app
+
+# 最新のAPKファイルを取得
+LATEST_APK=$(ls -t build-*.apk 2>/dev/null | head -n 1)
+
+if [ -z "$LATEST_APK" ]; then
+    echo "❌ APKファイルが見つかりません"
+    exit 1
+fi
+
+echo "📱 最新のビルド: $LATEST_APK"
+echo "📅 作成日時: $(stat -c %y "$LATEST_APK")"
+echo "📊 ファイルサイズ: $(du -h "$LATEST_APK" | cut -f1)"
+
+# Androidデバイスが接続されているか確認
+if ! adb devices | grep -q "device$"; then
+    echo "❌ Androidデバイスが接続されていません"
+    echo "💡 USBデバッグを有効にしてデバイスを接続してください"
+    exit 1
+fi
+
+echo "📱 接続されているデバイス:"
+adb devices
+
+# アプリのパッケージ名
+PACKAGE_NAME="com.masaway2525.tomicavault"
+
+# 既存のアプリをアンインストール
+# echo "🗑️  既存のアプリをアンインストール中..."
+# if adb shell pm list packages | grep -q "$PACKAGE_NAME"; then
+#     adb uninstall "$PACKAGE_NAME"
+#     echo "✅ 既存のアプリをアンインストールしました"
+# else
+#     echo "ℹ️  アンインストールするアプリが見つかりません"
+# fi
+
+# 最新のビルドをインストール
+echo "📦 最新のビルドをインストール中..."
+if adb install "$LATEST_APK"; then
+    echo "✅ インストールが完了しました!"
+    echo "🚀 アプリを起動できます"
+    
+    # アプリを自動起動（オプション）
+    read -p "アプリを起動しますか？ (y/n): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo "🚀 アプリを起動中..."
+        adb shell am start -n "$PACKAGE_NAME/com.tomicavault.MainActivity"
+    fi
+else
+    echo "❌ インストールに失敗しました"
+    exit 1
+fi
+
+echo "🎉 完了!"
