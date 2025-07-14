@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
 import { NFCShortcut } from '../../components/NFCShortcut';
 import { useTomica, Tomica } from '@/hooks/useTomica';
+import { useAuth } from '@/hooks/useAuth';
 import { TomicaItem } from '../../components/TomicaItem';
 import { useThemeColor } from '../../hooks/useThemeColor';
 import { useFocusEffect } from '@react-navigation/native';
@@ -49,6 +50,7 @@ export const situationOrder: Record<Situation, number> = {
 };
 
 export default function ListScreen() {
+  const { user, loading: authLoading } = useAuth();
   const { tomicaList, loading, error, fetchTomicaList } = useTomica();
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<'all' | '帰宅中' | '外出中'>('all');
@@ -59,8 +61,12 @@ export default function ListScreen() {
   // 画面フォーカス時に最新リスト取得
   useFocusEffect(
     React.useCallback(() => {
-      fetchTomicaList();
-    }, [])
+      // 認証が完了してからデータを取得
+      if (!authLoading && user) {
+        console.log('リスト画面 - 認証完了、データを取得開始');
+        fetchTomicaList();
+      }
+    }, [fetchTomicaList, authLoading, user])
   );
 
   // TomicaItem用のitem生成

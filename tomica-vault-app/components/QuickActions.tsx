@@ -30,7 +30,7 @@ export function QuickActions() {
 
   const actions = [
     {
-      title: 'トミカ追加',
+      title: 'おもちゃ追加',
       icon: 'add-circle' as const,
       onPress: () => router.push('/(tabs)/add'),
       color: '#4ECDC4',

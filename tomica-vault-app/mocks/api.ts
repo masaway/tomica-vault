@@ -1,7 +1,7 @@
 import { Tomica, Collection } from './types';
 import { mockTomicas, mockCollections } from './data';
 
-// トミカ関連のAPI
+// おもちゃ関連のAPI
 export const getTomicas = async (): Promise<Tomica[]> => {
   // 実際のAPIコールをシミュレート
   await new Promise(resolve => setTimeout(resolve, 500));

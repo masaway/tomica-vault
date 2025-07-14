@@ -1,15 +1,18 @@
 import { StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export function NFCShortcut() {
+  const insets = useSafeAreaInsets();
+  
   const handleNFCPress = () => {
     router.push('/nfc-reader');
   };
 
   return (
     <TouchableOpacity 
-      style={styles.nfcButton}
+      style={[styles.nfcButton, { bottom: insets.bottom + 90 }]}
       onPress={handleNFCPress}
     >
       <Ionicons name="scan" size={24} color="#fff" />
@@ -22,7 +25,6 @@ const styles = StyleSheet.create({
   nfcButton: {
     position: 'absolute',
     right: 20,
-    bottom: 20,
     width: 70,
     height: 70,
     borderRadius: 35,

@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 
 // 環境判定
 export const IS_EXPO_GO = Constants.appOwnership === 'expo';
-export const IS_DEVELOPMENT_BUILD = Constants.appOwnership === 'standalone';
+export const IS_DEVELOPMENT_BUILD = Constants.appOwnership === 'standalone' || !Constants.appOwnership || Constants.appOwnership !== 'expo';
 export const IS_DEV = __DEV__;
 
 // 環境情報の取得
@@ -13,7 +13,7 @@ export const getEnvironmentInfo = () => {
     isDevelopmentBuild: IS_DEVELOPMENT_BUILD,
     isDev: IS_DEV,
     platform: Platform.OS,
-    buildType: IS_EXPO_GO ? 'Expo Go' : 'Development Build',
+    buildType: IS_EXPO_GO ? 'Expo Go' : IS_DEVELOPMENT_BUILD ? 'Development Build' : 'Preview Build',
     appOwnership: Constants.appOwnership,
   };
 };

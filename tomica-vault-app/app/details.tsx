@@ -4,9 +4,10 @@ import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { useTomica, Tomica } from '@/hooks/useTomica';
-import type { Situation } from './(tabs)/list';
+import { useAuth } from '@/hooks/useAuth';
+import type { Situation } from './list';
 
-// トミカの状態を判断する関数
+// おもちゃの状態を判断する関数
 const determineTomicaSituation = (tomica: Tomica): Situation => {
   const { check_in_at, checked_out_at } = tomica;
 
@@ -155,26 +156,42 @@ const MemoSection = ({ tomica }: { tomica: Tomica }) => (
 export default function DetailsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { user, loading: authLoading } = useAuth();
   const { getTomicaById } = useTomica();
   const [tomica, setTomica] = useState<Tomica | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchTomicaDetails = async () => {
+      // 認証が完了するまで待機
+      if (authLoading) {
+        console.log('詳細画面 - 認証確認中のため待機');
+        return;
+      }
+      
+      if (!user) {
+        console.log('詳細画面 - ユーザーが認証されていません');
+        setLoading(false);
+        return;
+      }
+
+      console.log('詳細画面 - データ取得開始 params.id:', params.id);
       const id = Number(params.id);
+      console.log('詳細画面 - 変換後のID:', id);
       const data = await getTomicaById(id);
+      console.log('詳細画面 - 取得したデータ:', data);
       setTomica(data);
       setLoading(false);
     };
 
     fetchTomicaDetails();
-  }, [params.id]);
+  }, [params.id, user, authLoading, getTomicaById]);
 
   const handleDelete = () => {
     if (!tomica) return;
 
     Alert.alert(
-      'トミカの削除',
+      'おもちゃの削除',
       `${tomica.name}とお別れしますか？`,
       [
         {
@@ -216,7 +233,7 @@ export default function DetailsScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.center}>
-          <Text>トミカが見つかりませんでした</Text>
+          <Text>おもちゃが見つかりませんでした</Text>
         </View>
       </SafeAreaView>
     );
@@ -224,35 +241,26 @@ export default function DetailsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Stack.Screen 
-        options={{
-          title: 'トミカ詳細',
-          headerLeft: () => (
-            <Text 
-              style={styles.backButton}
-              onPress={() => router.back()}
-            >
-              戻る
-            </Text>
-          ),
-          headerRight: () => (
-            <View style={styles.headerButtons}>
-              <TouchableOpacity 
-                style={styles.headerButton}
-                onPress={handleEdit}
-              >
-                <FontAwesome name="pencil" size={20} color="#007AFF" />
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.headerButton}
-                onPress={handleDelete}
-              >
-                <FontAwesome name="trash" size={20} color="#FF3B30" />
-              </TouchableOpacity>
-            </View>
-          ),
-        }} 
-      />
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButtonContainer}>
+          <Text style={styles.backButton}>戻る</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>おもちゃ詳細</Text>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity 
+            style={styles.headerButton}
+            onPress={handleEdit}
+          >
+            <FontAwesome name="pencil" size={20} color="#007AFF" />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.headerButton}
+            onPress={handleDelete}
+          >
+            <FontAwesome name="trash" size={20} color="#FF3B30" />
+          </TouchableOpacity>
+        </View>
+      </View>
       <ScrollView style={styles.content}>
         <BasicInfoSection tomica={tomica} />
         <MovementHistorySection tomica={tomica} />
@@ -268,10 +276,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  header: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  backButtonContainer: {
+    flex: 1,
+  },
   backButton: {
     fontSize: 16,
     color: '#007AFF',
-    padding: 8,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    flex: 2,
+    textAlign: 'center',
   },
   content: {
     flex: 1,
@@ -348,6 +372,8 @@ const styles = StyleSheet.create({
   headerButtons: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+    justifyContent: 'flex-end',
   },
   headerButton: {
     padding: 8,

@@ -89,7 +89,7 @@ export default function SearchScreen() {
           ]}
           value={query}
           onChangeText={setQuery}
-          placeholder="トミカ名で検索"
+          placeholder="おもちゃ名で検索"
           placeholderTextColor={borderColor}
         />
       </View>
