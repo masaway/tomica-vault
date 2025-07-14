@@ -10,5 +10,5 @@ const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey || process.
 // Supabaseクライアントの作成
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 
-// トミカのテーブル名
+// おもちゃのテーブル名
 export const TOMICA_TABLE = 'owned_tomica'; 

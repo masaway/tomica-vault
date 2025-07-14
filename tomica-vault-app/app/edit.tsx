@@ -56,24 +56,15 @@ export default function EditScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Stack.Screen 
-        options={{
-          title: 'トミカ編集',
-          headerLeft: () => (
-            <Text 
-              style={styles.backButton}
-              onPress={() => router.back()}
-            >
-              キャンセル
-            </Text>
-          ),
-          headerRight: () => (
-            <TouchableOpacity onPress={handleSave} disabled={isLoading}>
-              <Text style={styles.saveButton}>{isLoading ? '保存中...' : '保存'}</Text>
-            </TouchableOpacity>
-          ),
-        }} 
-      />
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButtonContainer}>
+          <Text style={styles.backButton}>キャンセル</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>おもちゃ編集</Text>
+        <TouchableOpacity onPress={handleSave} disabled={isLoading} style={styles.saveButtonContainer}>
+          <Text style={styles.saveButton}>{isLoading ? '保存中...' : '保存'}</Text>
+        </TouchableOpacity>
+      </View>
       <ScrollView style={styles.content}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>基本情報</Text>
@@ -83,7 +74,7 @@ export default function EditScreen() {
               style={styles.input}
               value={name}
               onChangeText={setName}
-              placeholder="トミカの名前"
+              placeholder="おもちゃの名前"
               editable={!isLoading}
             />
           </View>
@@ -139,15 +130,34 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  header: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  backButtonContainer: {
+    flex: 1,
+  },
   backButton: {
     fontSize: 16,
     color: '#007AFF',
-    padding: 8,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    flex: 2,
+    textAlign: 'center',
+  },
+  saveButtonContainer: {
+    flex: 1,
+    alignItems: 'flex-end',
   },
   saveButton: {
     fontSize: 16,
     color: '#007AFF',
-    padding: 8,
     fontWeight: 'bold',
   },
   content: {

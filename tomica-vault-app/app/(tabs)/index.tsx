@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
 import { useTomica } from '../../hooks/useTomica';
+import { useAuth } from '../../hooks/useAuth';
 import { NFCShortcut } from '../../components/NFCShortcut';
 import { DashboardCard } from '../../components/DashboardCard';
 import { RecentActivity } from '../../components/RecentActivity';
@@ -14,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function HomeScreen() {
+  const { user, loading: authLoading } = useAuth();
   const { stats, loading, error, fetchStats } = useTomica();
   const [refreshing, setRefreshing] = useState(false);
   const backgroundColor = useThemeColor({}, 'background');
@@ -25,8 +27,12 @@ export default function HomeScreen() {
   const [lastRead, setLastRead] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
+    // 認証が完了してからデータを取得
+    if (!authLoading && user) {
+      console.log('ホーム画面 - 認証完了、データを取得開始');
+      fetchStats();
+    }
+  }, [fetchStats, authLoading, user]);
 
   useEffect(() => {
     (async () => {
@@ -88,7 +94,7 @@ export default function HomeScreen() {
         end={{ x: 1, y: 1 }}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={styles.title}>トミカコレクション</Text>
+          <Text style={styles.title}>トイパトコレクション</Text>
           <TouchableOpacity
             style={{ marginLeft: 8, position: 'absolute', right: 0 }}
             onPress={handleOpenModal}
@@ -102,7 +108,7 @@ export default function HomeScreen() {
             )}
           </TouchableOpacity>
         </View>
-        <Text style={styles.subtitle}>あなたのトミカワールド</Text>
+        <Text style={styles.subtitle}>あなたのおもちゃワールド</Text>
       </LinearGradient>
 
       <ScrollView

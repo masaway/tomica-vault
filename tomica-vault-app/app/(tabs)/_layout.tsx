@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useThemeColor } from '../../hooks/useThemeColor';
 
@@ -9,26 +9,19 @@ export default function TabLayout() {
   const tintColor = useThemeColor({}, 'tint');
 
   const handleAddPress = () => {
-    Alert.alert(
-      '新規登録',
-      '新しいトミカを登録しますか？',
-      [
-        {
-          text: 'キャンセル',
-          style: 'cancel',
-        },
-        {
-          text: '登録する',
-          onPress: () => router.push('/add'),
-        },
-      ],
-      { cancelable: true }
-    );
+    router.push('/add');
   };
 
   return (
     <Tabs screenOptions={{
       tabBarActiveTintColor: tintColor,
+      tabBarStyle: {
+        justifyContent: 'space-between',
+        paddingHorizontal: 0,
+      },
+      tabBarLabelStyle: {
+        fontSize: 10,
+      },
     }}>
       <Tabs.Screen
         name="index"
@@ -56,6 +49,9 @@ export default function TabLayout() {
                 {
                   opacity: pressed ? 0.7 : 1,
                   alignItems: 'center',
+                  flex: 1,
+                  justifyContent: 'center',
+                  paddingVertical: 8,
                 },
               ]}
             >
@@ -73,7 +69,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="list"
         options={{
-          title: 'トミカ一覧',
+          title: 'おもちゃ一覧',
           tabBarIcon: ({ color }) => <FontAwesome name="list" size={24} color={color} />,
         }}
       />

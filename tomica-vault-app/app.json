@@ -1,9 +1,10 @@
 {
   "expo": {
-    "name": "トミカボルト",
+    "name": "トイパト",
     "slug": "tomica-vault-app",
     "version": "1.0.0",
     "orientation": "portrait",
+    "platforms": ["ios", "android", "web"],
     "icon": "./assets/images/icon.png",
     "scheme": "tomicavaultapp",
     "userInterfaceStyle": "automatic",
@@ -14,7 +15,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#87CEEB"
       },
       "package": "com.masaway2525.tomicavaultapp"
     },
@@ -31,7 +32,7 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#87CEEB"
         }
       ],
       [

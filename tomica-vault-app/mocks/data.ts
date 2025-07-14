@@ -30,7 +30,7 @@ export const mockCollections: Collection[] = [
   {
     id: '1',
     name: '2023年コレクション',
-    description: '2023年に発売されたトミカのコレクション',
+    description: '2023年に発売されたおもちゃのコレクション',
     tomicas: mockTomicas,
     createdAt: '2024-03-15T00:00:00Z',
     updatedAt: '2024-03-15T00:00:00Z',

@@ -1,43 +1,160 @@
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import ReactLogo from '../assets/images/react-logo.png';
 import { useNFC } from '@/hooks/useNFC';
 import { useNFCEnvironment } from '@/hooks/useNFCEnvironment';
+import { useTomica, Tomica } from '@/hooks/useTomica';
 import { logEnvironmentInfo } from '@/constants/Environment';
+import NFCModal from '@/components/NFCModal';
 
 export default function NFCReaderScreen() {
   const { nfcState, startAutoScan, stopAutoScan } = useNFC();
   const { environmentName, isNFCAvailable } = useNFCEnvironment();
+  const { getTomicaByNfcTagId, updateNfcScanTime, updateTomica } = useTomica();
+  
+  // モーダル状態管理
+  const [modalVisible, setModalVisible] = useState(false);
+  const [scannedTomicaList, setScannedTomicaList] = useState<Tomica[]>([]);
+  const [isScreenFocused, setIsScreenFocused] = useState(false);
 
-  useEffect(() => {
-    // 環境情報をログ出力
-    logEnvironmentInfo();
-    
-    // ページアクセス時に自動スキャンを開始
-    if (nfcState.isSupported) {
-      startAutoScan();
-    }
-    
-    // クリーンアップ時に自動スキャンを停止
-    return () => {
-      stopAutoScan();
-    };
-  }, [nfcState.isSupported, startAutoScan, stopAutoScan]);
+  // 画面フォーカス時にのみNFC機能を有効化
+  useFocusEffect(
+    useCallback(() => {
+      console.log('NFC Reader画面がフォーカスされました');
+      setIsScreenFocused(true);
+      
+      // 環境情報をログ出力
+      logEnvironmentInfo();
+      
+      // 画面フォーカス時に自動スキャンを開始
+      if (nfcState.isSupported) {
+        startAutoScan();
+      }
+      
+      // 画面離脱時に自動スキャンを停止
+      return () => {
+        console.log('NFC Reader画面からフォーカスが外れました');
+        setIsScreenFocused(false);
+        stopAutoScan();
+      };
+    }, [nfcState.isSupported, startAutoScan, stopAutoScan])
+  );
 
-  // 新しいタグが検出されたときのアラート表示
-  useEffect(() => {
-    if (nfcState.lastResult) {
+  // NFCタグ検出時の処理
+  const handleNfcTagDetected = useCallback(async (tagId: string) => {
+    try {
+      console.log('NFCタグを検出:', tagId);
+      
+      // tag_idでおもちゃを検索
+      const foundTomica = await getTomicaByNfcTagId(tagId);
+      
+      if (foundTomica) {
+        // スキャン日時を更新
+        await updateNfcScanTime(foundTomica.id);
+        
+        // 連続スキャン対応: 既存のリストに追加または更新
+        setScannedTomicaList(prevList => {
+          const existingIndex = prevList.findIndex(t => t.id === foundTomica.id);
+          if (existingIndex >= 0) {
+            // 既に存在する場合は更新
+            const updatedList = [...prevList];
+            updatedList[existingIndex] = foundTomica;
+            return updatedList;
+          } else {
+            // 新しい場合は追加
+            return [...prevList, foundTomica];
+          }
+        });
+        
+        // モーダルを表示
+        setModalVisible(true);
+        
+        console.log('おもちゃが見つかりました:', foundTomica.name);
+      } else {
+        // おもちゃが見つからない場合
+        setScannedTomicaList([]);
+        setModalVisible(true);
+        console.log('おもちゃが見つかりませんでした、新規登録が必要です');
+      }
+    } catch (error) {
+      console.error('NFCタグ処理エラー:', error);
       Alert.alert(
-        'NFC読み取り成功',
-        `タグID: ${nfcState.lastResult.id}\n\n詳細情報は画面下部に表示されます`,
+        'エラー',
+        'NFCタグの処理中にエラーが発生しました',
         [{ text: 'OK' }]
       );
     }
-  }, [nfcState.lastResult]);
+  }, [getTomicaByNfcTagId, updateNfcScanTime]);
+
+  // NFCタグ検出時の処理（画面フォーカス時のみ）
+  useEffect(() => {
+    if (nfcState.lastResult && isScreenFocused) {
+      console.log('画面フォーカス中にNFCタグを検出:', nfcState.lastResult.id);
+      handleNfcTagDetected(nfcState.lastResult.id);
+    } else if (nfcState.lastResult && !isScreenFocused) {
+      console.log('画面がフォーカスされていないため、NFCタグ処理をスキップ:', nfcState.lastResult.id);
+    }
+  }, [nfcState.lastResult, isScreenFocused, handleNfcTagDetected]);
+
+
+  // モーダルを閉じる
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    // モーダルを閉じる際にリストをクリア（連続スキャンの終了）
+    setTimeout(() => {
+      setScannedTomicaList([]);
+    }, 300); // アニメーション後にクリア
+  };
+
+  // チェックアウト処理
+  const handleCheckOut = async (tomica: Tomica) => {
+    try {
+      const result = await updateTomica(tomica.id, {
+        name: tomica.name,
+        situation: '外出中',
+        notes: tomica.memo || '',
+      });
+      
+      if (result) {
+        Alert.alert(
+          '持ち出し登録完了',
+          `${tomica.name}を持ち出し登録しました`,
+          [{ text: 'OK' }]
+        );
+        handleCloseModal();
+      }
+    } catch (error) {
+      console.error('チェックアウトエラー:', error);
+      Alert.alert('エラー', 'チェックアウトに失敗しました');
+    }
+  };
+
+  // チェックイン処理
+  const handleCheckIn = async (tomica: Tomica) => {
+    try {
+      const result = await updateTomica(tomica.id, {
+        name: tomica.name,
+        situation: '帰宅中',
+        notes: tomica.memo || '',
+      });
+      
+      if (result) {
+        Alert.alert(
+          '帰宅登録完了',
+          `${tomica.name}を帰宅登録しました`,
+          [{ text: 'OK' }]
+        );
+        handleCloseModal();
+      }
+    } catch (error) {
+      console.error('チェックインエラー:', error);
+      Alert.alert('エラー', 'チェックインに失敗しました');
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -71,7 +188,7 @@ export default function NFCReaderScreen() {
           <View style={styles.nfcIconContainer}>
             <Image
               source={ReactLogo}
-              style={{ width: 100, height: 100 }}
+              style={{ width: 80, height: 80 }}
               contentFit="contain"
             />
             {nfcState.isAutoScanning && (
@@ -108,7 +225,7 @@ export default function NFCReaderScreen() {
           )}
         </View>
 
-        {/* 読み取り結果表示 */}
+        {/* 読み取り結果表示 - 画面中央に配置 */}
         {nfcState.lastResult && (
           <View style={styles.resultContainer}>
             <Text style={styles.resultTitle}>読み取り結果</Text>
@@ -147,6 +264,16 @@ export default function NFCReaderScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* NFCモーダル */}
+      <NFCModal
+        visible={modalVisible}
+        onClose={handleCloseModal}
+        tomicaList={scannedTomicaList}
+        onCheckOut={handleCheckOut}
+        onCheckIn={handleCheckIn}
+        scannedNfcTagId={nfcState.lastResult?.id}
+      />
     </SafeAreaView>
   );
 }
@@ -176,9 +303,9 @@ const styles = StyleSheet.create({
   },
   environmentInfo: {
     backgroundColor: '#f8f9fa',
-    padding: 12,
+    padding: 10,
     borderRadius: 8,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   environmentText: {
     fontSize: 14,
@@ -199,16 +326,16 @@ const styles = StyleSheet.create({
   },
   nfcArea: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   nfcIconContainer: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
     backgroundColor: '#f5f5f5',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 20,
     position: 'relative',
   },
   scanningOverlay: {
@@ -217,7 +344,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderRadius: 100,
+    borderRadius: 75,
     backgroundColor: 'rgba(74, 144, 226, 0.8)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -237,7 +364,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   autoScanStatus: {
     flexDirection: 'row',
@@ -270,19 +397,19 @@ const styles = StyleSheet.create({
   },
   resultContainer: {
     backgroundColor: '#f8f9fa',
-    padding: 16,
+    padding: 12,
     borderRadius: 8,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   resultTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 12,
+    marginBottom: 8,
     color: '#333',
   },
   resultItem: {
     flexDirection: 'row',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   resultLabel: {
     fontSize: 14,
@@ -296,19 +423,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   detailsContainer: {
-    marginTop: 16,
+    marginTop: 12,
   },
   detailsTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 6,
     color: '#333',
   },
   detailsScroll: {
-    maxHeight: 200,
+    maxHeight: 120,
     backgroundColor: '#fff',
     borderRadius: 4,
-    padding: 12,
+    padding: 8,
     borderWidth: 1,
     borderColor: '#e0e0e0',
   },

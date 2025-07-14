@@ -81,8 +81,29 @@ const useNFCReal = () => {
     return () => {
       if (NfcManager) {
         try {
-          NfcManager.setEventListener(null);
-          NfcManager.stop();
+          // 個別にイベントリスナーをクリア（安全な方法）
+          const { NfcEvents } = require('react-native-nfc-manager');
+          
+          try {
+            NfcManager.setEventListener(NfcEvents.DiscoverTag, null);
+          } catch (e) {
+            console.log('DiscoverTagイベントの初期化時クリアに失敗:', e);
+          }
+          
+          try {
+            NfcManager.setEventListener(NfcEvents.SessionClosed, null);
+          } catch (e) {
+            console.log('SessionClosedイベントの初期化時クリアに失敗:', e);
+          }
+          
+          try {
+            NfcManager.setEventListener(NfcEvents.StateChanged, null);
+          } catch (e) {
+            console.log('StateChangedイベントの初期化時クリアに失敗:', e);
+          }
+          
+          // NfcManagerには stop() メソッドは存在しない
+          // cancelTechnologyRequest() で十分
           console.log('NFC機能をクリーンアップしました');
         } catch (error) {
           console.error('NFC機能のクリーンアップでエラー:', error);
@@ -108,6 +129,15 @@ const useNFCReal = () => {
       const { NfcEvents } = require('react-native-nfc-manager');
       
       console.log('自動NFCスキャンを開始します');
+      
+      // 既存のイベントリスナーを確実にクリア
+      try {
+        NfcManager.setEventListener(NfcEvents.DiscoverTag, null);
+        NfcManager.setEventListener(NfcEvents.SessionClosed, null);
+        NfcManager.setEventListener(NfcEvents.StateChanged, null);
+      } catch (e) {
+        console.log('既存イベントリスナーのクリアに失敗（通常は問題なし）:', e);
+      }
       
       setNfcState(prev => ({ ...prev, isAutoScanning: true, error: null }));
       
@@ -163,10 +193,7 @@ const useNFCReal = () => {
 
   // 自動スキャン停止
   const stopAutoScan = useCallback(async () => {
-    if (!nfcState.isAutoScanning) {
-      console.log('自動スキャンは開始されていません');
-      return;
-    }
+    console.log('自動NFCスキャンの停止を試みます');
 
     try {
       const NfcManager = require('react-native-nfc-manager').default;
@@ -174,15 +201,45 @@ const useNFCReal = () => {
       
       console.log('自動NFCスキャンを停止します');
       
-      // 全てのイベントリスナーを削除
-      NfcManager.setEventListener(NfcEvents.DiscoverTag, null);
-      NfcManager.setEventListener(NfcEvents.SessionClosed, null);
-      NfcManager.setEventListener(NfcEvents.StateChanged, null);
+      // 全てのイベントリスナーを削除（存在チェック付き）
+      try {
+        NfcManager.setEventListener(NfcEvents.DiscoverTag, null);
+      } catch (e) {
+        console.log('DiscoverTagイベントのクリアに失敗:', e);
+      }
+      
+      try {
+        NfcManager.setEventListener(NfcEvents.SessionClosed, null);
+      } catch (e) {
+        console.log('SessionClosedイベントのクリアに失敗:', e);
+      }
+      
+      try {
+        NfcManager.setEventListener(NfcEvents.StateChanged, null);
+      } catch (e) {
+        console.log('StateChangedイベントのクリアに失敗:', e);
+      }
       
       // 自動スキャン停止
-      await NfcManager.unregisterTagEvent();
+      try {
+        await NfcManager.unregisterTagEvent();
+      } catch (e) {
+        console.log('unregisterTagEventに失敗:', e);
+      }
       
-      setNfcState(prev => ({ ...prev, isAutoScanning: false }));
+      // 進行中の技術リクエストもキャンセル
+      try {
+        await NfcManager.cancelTechnologyRequest();
+      } catch (e) {
+        console.log('技術リクエストのキャンセルに失敗（通常は問題なし）:', e);
+      }
+      
+      // 状態を確実にリセット
+      setNfcState(prev => ({ 
+        ...prev, 
+        isAutoScanning: false,
+        error: null 
+      }));
       console.log('自動スキャンが停止されました');
       
     } catch (error: any) {
@@ -191,10 +248,10 @@ const useNFCReal = () => {
       setNfcState(prev => ({ 
         ...prev, 
         isAutoScanning: false,
-        error: `自動スキャンの停止に失敗しました: ${error.message}` 
+        error: null // エラーメッセージは設定しない（停止処理なので）
       }));
     }
-  }, [nfcState.isAutoScanning]);
+  }, []);
 
   const readNfcTag = async (): Promise<NFCReadResult | null> => {
     if (!nfcState.isSupported) {

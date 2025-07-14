@@ -7,7 +7,7 @@ type Tomica = {
   id: number;
   name: string;
   situation: string;
-  nfc_tag_uid: number;
+  nfc_tag_uid: string;
   check_in_at: string | null;
   checked_out_at: string | null;
   lastUpdatedDate: string;
