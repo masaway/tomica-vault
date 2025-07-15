@@ -190,6 +190,8 @@ adb shell am start -n com.masaway2525.tomicavault/com.tomicavault.MainActivity
 # アプリのログ監視
 adb logcat -v time | grep -E "tomicavaultapp|ERROR|FATAL|EXCEPTION|ReactNative"
 
+adb logcat -s ReactNativeJS
+
 # 画面キャプチャ
 adb shell screencap -p /sdcard/screen.png
 adb pull /sdcard/screen.png

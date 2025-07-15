@@ -32,20 +32,30 @@ echo "📱 接続されているデバイス:"
 adb devices
 
 # アプリのパッケージ名
-PACKAGE_NAME="com.masaway2525.tomicavault"
+PACKAGE_NAME="com.masaway2525.tomicavaultapp"
 
 # 既存のアプリをアンインストール
-# echo "🗑️  既存のアプリをアンインストール中..."
-# if adb shell pm list packages | grep -q "$PACKAGE_NAME"; then
-#     adb uninstall "$PACKAGE_NAME"
-#     echo "✅ 既存のアプリをアンインストールしました"
-# else
-#     echo "ℹ️  アンインストールするアプリが見つかりません"
-# fi
+echo "🗑️  既存のアプリをアンインストール中..."
+if adb shell pm list packages | grep -q "$PACKAGE_NAME"; then
+    echo "📱 既存のアプリが見つかりました。アンインストールします..."
+    if adb uninstall "$PACKAGE_NAME"; then
+        echo "✅ 既存のアプリをアンインストールしました"
+    else
+        echo "⚠️  アンインストールに失敗しましたが、続行します"
+    fi
+else
+    echo "ℹ️  アンインストールするアプリが見つかりません"
+fi
 
 # 最新のビルドをインストール
 echo "📦 最新のビルドをインストール中..."
-if adb install "$LATEST_APK"; then
+echo "🔄 実行コマンド: adb install \"$LATEST_APK\""
+
+# 最初のインストール試行
+INSTALL_OUTPUT=$(adb install "$LATEST_APK" 2>&1)
+INSTALL_RESULT=$?
+
+if [ $INSTALL_RESULT -eq 0 ]; then
     echo "✅ インストールが完了しました!"
     echo "🚀 アプリを起動できます"
     
@@ -54,11 +64,45 @@ if adb install "$LATEST_APK"; then
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         echo "🚀 アプリを起動中..."
-        adb shell am start -n "$PACKAGE_NAME/com.tomicavault.MainActivity"
+        echo "🔄 実行コマンド: adb shell am start -n \"$PACKAGE_NAME/.MainActivity\""
+        if adb shell am start -n "$PACKAGE_NAME/.MainActivity"; then
+            echo "✅ アプリが正常に起動しました"
+        else
+            echo "⚠️  アプリの起動に失敗しました（手動で起動してください）"
+        fi
     fi
 else
-    echo "❌ インストールに失敗しました"
-    exit 1
+    echo "⚠️  インストールに失敗しました"
+    echo "📋 エラー詳細: $INSTALL_OUTPUT"
+    
+    # 署名競合エラーの自動検出・解決
+    if echo "$INSTALL_OUTPUT" | grep -q "INSTALL_FAILED_UPDATE_INCOMPATIBLE\|signatures do not match"; then
+        echo "🔍 署名の競合が検出されました"
+        echo "🗑️  強制アンインストールを実行します..."
+        
+        # 強制アンインストールを試行
+        if adb shell pm uninstall --user 0 "$PACKAGE_NAME" 2>/dev/null; then
+            echo "✅ 強制アンインストールが成功しました"
+        else
+            echo "ℹ️  強制アンインストールもスキップします"
+        fi
+        
+        echo "🔄 再度インストールを試行します..."
+        if adb install "$LATEST_APK"; then
+            echo "✅ 再インストールが成功しました!"
+        else
+            echo "❌ 再インストールも失敗しました"
+            echo "💡 手動でアンインストールしてから再実行してください"
+            exit 1
+        fi
+    else
+        echo "❌ インストールに失敗しました"
+        echo "💡 以下を確認してください："
+        echo "   - デバイスの接続状態"
+        echo "   - USBデバッグの有効状態"
+        echo "   - ストレージ容量"
+        exit 1
+    fi
 fi
 
 echo "🎉 完了!"

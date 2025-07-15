@@ -1,7 +1,8 @@
-import { StyleSheet, View, Text, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Alert, ScrollView, Switch, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeColor } from '../../hooks/useThemeColor';
 import { useAuth } from '../../hooks/useAuth';
+import { useAudio } from '../../hooks/useAudio';
 import { FontAwesome } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
@@ -10,6 +11,7 @@ export default function SettingsScreen() {
   const textColor = useThemeColor({}, 'text');
   const borderColor = useThemeColor({}, 'border');
   const { user, signOut } = useAuth();
+  const { audioState, setEnabled, playSuccessSound } = useAudio();
 
   const handleLogout = async () => {
     Alert.alert(
@@ -51,6 +53,38 @@ export default function SettingsScreen() {
       'バージョン: 1.0.0\n\nおもちゃの収納管理アプリです。NFCタグを使っておもちゃの出し入れを記録できます。\n\n開発者: Toy Patrol Team',
       [{ text: 'OK' }]
     );
+  };
+
+  const handleAudioToggle = (value: boolean) => {
+    setEnabled(value);
+    if (value) {
+      // 音声が有効になった時にテスト音を再生
+      playSuccessSound().catch(error => {
+        console.error('テスト音の再生に失敗:', error);
+      });
+    }
+  };
+
+  const handleTestSound = () => {
+    console.log('🧪 テスト音再生ボタンが押されました');
+    playSuccessSound().catch(error => {
+      console.error('🧪 テスト音の再生に失敗:', error);
+      Alert.alert('エラー', `テスト音の再生に失敗しました: ${error.message}`);
+    });
+  };
+
+  const handleAudioDebugInfo = () => {
+    const debugInfo = `
+音声状態デバッグ情報:
+- 有効: ${audioState.isEnabled ? 'はい' : 'いいえ'}
+- 読み込み済み: ${audioState.isLoaded ? 'はい' : 'いいえ'}
+- 再生中: ${audioState.isPlaying ? 'はい' : 'いいえ'}
+- 音量: ${Math.round(audioState.volume * 100)}%
+- エラー: ${audioState.error || 'なし'}
+- プラットフォーム: ${Platform.OS}
+    `.trim();
+    
+    Alert.alert('音声デバッグ情報', debugInfo);
   };
 
   return (
@@ -99,6 +133,35 @@ export default function SettingsScreen() {
         <View style={[styles.section, { borderBottomColor: borderColor }]}>
           <Text style={[styles.sectionTitle, { color: textColor }]}>アプリ設定</Text>
           
+          <View style={[styles.settingItem, { borderBottomColor: borderColor }]}>
+            <FontAwesome name="volume-up" size={16} color={textColor} style={styles.icon} />
+            <Text style={[styles.settingText, { color: textColor }]}>音声効果</Text>
+            <Switch
+              value={audioState.isEnabled}
+              onValueChange={handleAudioToggle}
+              trackColor={{ false: '#767577', true: '#81b0ff' }}
+              thumbColor={audioState.isEnabled ? '#f5dd4b' : '#f4f3f4'}
+            />
+          </View>
+
+          <TouchableOpacity 
+            style={[styles.settingItem, { borderBottomColor: borderColor }]}
+            onPress={handleTestSound}
+          >
+            <FontAwesome name="play-circle" size={16} color={textColor} style={styles.icon} />
+            <Text style={[styles.settingText, { color: textColor }]}>テスト音再生</Text>
+            <FontAwesome name="chevron-right" size={12} color={textColor} />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.settingItem, { borderBottomColor: borderColor }]}
+            onPress={handleAudioDebugInfo}
+          >
+            <FontAwesome name="bug" size={16} color={textColor} style={styles.icon} />
+            <Text style={[styles.settingText, { color: textColor }]}>音声デバッグ情報</Text>
+            <FontAwesome name="chevron-right" size={12} color={textColor} />
+          </TouchableOpacity>
+
           <TouchableOpacity style={[styles.settingItem, { borderBottomColor: borderColor }]}>
             <FontAwesome name="bell" size={16} color={textColor} style={styles.icon} />
             <Text style={[styles.settingText, { color: textColor }]}>通知設定</Text>

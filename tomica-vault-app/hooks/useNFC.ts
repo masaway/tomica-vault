@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Platform, Alert } from 'react-native';
 import { useNFCEnvironment } from './useNFCEnvironment';
+import { useAudio } from './useAudio';
 
 // NFC読み取り結果の型定義
 export interface NFCReadResult {
@@ -21,6 +22,7 @@ export interface NFCState {
 
 // Development Build用のNFC実装
 const useNFCReal = () => {
+  const { playSuccessSound, audioState, waitForReady } = useAudio();
   const [nfcState, setNfcState] = useState<NFCState>({
     isScanning: false,
     isSupported: false,
@@ -28,45 +30,49 @@ const useNFCReal = () => {
     error: null,
     isAutoScanning: false,
   });
+  
+  // 状態参照用のref
+  const nfcStateRef = useRef(nfcState);
+  
+  // 状態更新時にrefも更新
+  useEffect(() => {
+    nfcStateRef.current = nfcState;
+  }, [nfcState]);
 
   useEffect(() => {
     let NfcManager: any = null;
+    let isInitialized = false;
     
     const initNFC = async () => {
       try {
+        // react-native-nfc-managerの存在確認
+        let NfcManagerModule;
+        try {
+          NfcManagerModule = require('react-native-nfc-manager');
+        } catch (moduleError) {
+          throw new Error('NFC モジュールがインストールされていません');
+        }
+        
         // 公式ドキュメントに従った正しい実装
-        NfcManager = require('react-native-nfc-manager').default;
-        const { NfcTech } = require('react-native-nfc-manager');
+        NfcManager = NfcManagerModule.default;
         
-        console.log('NFC Manager を初期化します');
-        console.log('NfcTech定数:', NfcTech);
+        // 最新ドキュメントに従った実装：まずstart()を呼び出す
+        await NfcManager.start();
         
-        // NFC対応確認
+        // start()後にNFC対応状況を確認
         const supported = await NfcManager.isSupported();
-        console.log('NFC対応状況:', supported);
         
         if (supported) {
-          // NFC初期化（公式ドキュメントの推奨方法）
-          await NfcManager.start();
-          
+          isInitialized = true;
           setNfcState(prev => ({ ...prev, isSupported: true }));
-          console.log('NFC機能が初期化されました');
         } else {
           setNfcState(prev => ({ 
             ...prev, 
             isSupported: false, 
             error: 'この端末はNFC機能をサポートしていません' 
           }));
-          console.log('NFC機能がサポートされていません');
         }
       } catch (error: any) {
-        console.error('NFC初期化エラー:', error);
-        console.error('エラーの詳細:', {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
-        });
-        
         setNfcState(prev => ({ 
           ...prev, 
           isSupported: false, 
@@ -77,36 +83,17 @@ const useNFCReal = () => {
 
     initNFC();
 
-    // クリーンアップ（公式ドキュメント推奨）
+    // クリーンアップ
     return () => {
-      if (NfcManager) {
+      if (NfcManager && isInitialized) {
         try {
-          // 個別にイベントリスナーをクリア（安全な方法）
           const { NfcEvents } = require('react-native-nfc-manager');
-          
-          try {
-            NfcManager.setEventListener(NfcEvents.DiscoverTag, null);
-          } catch (e) {
-            console.log('DiscoverTagイベントの初期化時クリアに失敗:', e);
-          }
-          
-          try {
-            NfcManager.setEventListener(NfcEvents.SessionClosed, null);
-          } catch (e) {
-            console.log('SessionClosedイベントの初期化時クリアに失敗:', e);
-          }
-          
-          try {
-            NfcManager.setEventListener(NfcEvents.StateChanged, null);
-          } catch (e) {
-            console.log('StateChangedイベントの初期化時クリアに失敗:', e);
-          }
-          
-          // NfcManagerには stop() メソッドは存在しない
-          // cancelTechnologyRequest() で十分
-          console.log('NFC機能をクリーンアップしました');
+          NfcManager.setEventListener(NfcEvents.DiscoverTag, null);
+          NfcManager.setEventListener(NfcEvents.SessionClosed, null);
+          NfcManager.setEventListener(NfcEvents.StateChanged, null);
+          NfcManager.unregisterTagEvent();
         } catch (error) {
-          console.error('NFC機能のクリーンアップでエラー:', error);
+          // エラーは無視（クリーンアップ時）
         }
       }
     };
@@ -114,13 +101,9 @@ const useNFCReal = () => {
 
   // 自動スキャン機能
   const startAutoScan = useCallback(async () => {
-    if (!nfcState.isSupported) {
-      console.log('NFC機能がサポートされていません');
-      return;
-    }
-
-    if (nfcState.isAutoScanning) {
-      console.log('既に自動スキャンが開始されています');
+    const currentState = nfcStateRef.current;
+    
+    if (!currentState.isSupported || currentState.isAutoScanning) {
       return;
     }
 
@@ -128,22 +111,20 @@ const useNFCReal = () => {
       const NfcManager = require('react-native-nfc-manager').default;
       const { NfcEvents } = require('react-native-nfc-manager');
       
-      console.log('自動NFCスキャンを開始します');
-      
-      // 既存のイベントリスナーを確実にクリア
+      // 既存のイベントリスナーをクリア
       try {
+        await NfcManager.unregisterTagEvent();
         NfcManager.setEventListener(NfcEvents.DiscoverTag, null);
         NfcManager.setEventListener(NfcEvents.SessionClosed, null);
         NfcManager.setEventListener(NfcEvents.StateChanged, null);
       } catch (e) {
-        console.log('既存イベントリスナーのクリアに失敗（通常は問題なし）:', e);
+        // エラーは無視
       }
       
       setNfcState(prev => ({ ...prev, isAutoScanning: true, error: null }));
       
       // タグ検出イベントリスナーを設定
-      NfcManager.setEventListener(NfcEvents.DiscoverTag, (tag: any) => {
-        console.log('自動スキャンでタグを検出:', tag);
+      NfcManager.setEventListener(NfcEvents.DiscoverTag, async (tag: any) => {
         
         const result: NFCReadResult = {
           id: tag.id || 'unknown',
@@ -157,17 +138,27 @@ const useNFCReal = () => {
           lastResult: result,
           error: null 
         }));
+
+        // スキャン成功音を再生
+        if (audioState.isEnabled) {
+          try {
+            const isReady = await waitForReady();
+            if (isReady) {
+              await playSuccessSound();
+            }
+          } catch (error) {
+            // 音声再生エラーは無視
+          }
+        }
       });
       
       // セッションクローズイベントリスナーを設定
       NfcManager.setEventListener(NfcEvents.SessionClosed, () => {
-        console.log('NFCセッションがクローズされました');
         setNfcState(prev => ({ ...prev, isAutoScanning: false }));
       });
       
       // エラーイベントリスナーを設定
       NfcManager.setEventListener(NfcEvents.StateChanged, (state: any) => {
-        console.log('NFC状態が変更されました:', state);
         if (state === 'off') {
           setNfcState(prev => ({ 
             ...prev, 
@@ -179,82 +170,54 @@ const useNFCReal = () => {
       
       // 自動スキャン開始
       await NfcManager.registerTagEvent();
-      console.log('自動スキャンが開始されました');
       
     } catch (error: any) {
-      console.error('自動スキャン開始エラー:', error);
       setNfcState(prev => ({ 
         ...prev, 
         isAutoScanning: false,
         error: `自動スキャンの開始に失敗しました: ${error.message}` 
       }));
     }
-  }, [nfcState.isSupported, nfcState.isAutoScanning]);
+  }, [audioState.isEnabled, audioState.isLoaded, audioState.isPlaying, playSuccessSound, waitForReady]);
 
   // 自動スキャン停止
   const stopAutoScan = useCallback(async () => {
-    console.log('自動NFCスキャンの停止を試みます');
-
     try {
       const NfcManager = require('react-native-nfc-manager').default;
       const { NfcEvents } = require('react-native-nfc-manager');
       
-      console.log('自動NFCスキャンを停止します');
-      
-      // 全てのイベントリスナーを削除（存在チェック付き）
+      // 全てのイベントリスナーを削除
       try {
         NfcManager.setEventListener(NfcEvents.DiscoverTag, null);
-      } catch (e) {
-        console.log('DiscoverTagイベントのクリアに失敗:', e);
-      }
-      
-      try {
         NfcManager.setEventListener(NfcEvents.SessionClosed, null);
-      } catch (e) {
-        console.log('SessionClosedイベントのクリアに失敗:', e);
-      }
-      
-      try {
         NfcManager.setEventListener(NfcEvents.StateChanged, null);
-      } catch (e) {
-        console.log('StateChangedイベントのクリアに失敗:', e);
-      }
-      
-      // 自動スキャン停止
-      try {
         await NfcManager.unregisterTagEvent();
-      } catch (e) {
-        console.log('unregisterTagEventに失敗:', e);
-      }
-      
-      // 進行中の技術リクエストもキャンセル
-      try {
         await NfcManager.cancelTechnologyRequest();
       } catch (e) {
-        console.log('技術リクエストのキャンセルに失敗（通常は問題なし）:', e);
+        // エラーは無視
       }
       
-      // 状態を確実にリセット
+      // 状態をリセット
       setNfcState(prev => ({ 
         ...prev, 
         isAutoScanning: false,
         error: null 
       }));
-      console.log('自動スキャンが停止されました');
       
     } catch (error: any) {
-      console.error('自動スキャン停止エラー:', error);
       // エラーが発生してもスキャン状態はリセット
       setNfcState(prev => ({ 
         ...prev, 
         isAutoScanning: false,
-        error: null // エラーメッセージは設定しない（停止処理なので）
+        error: null
       }));
     }
   }, []);
 
   const readNfcTag = async (): Promise<NFCReadResult | null> => {
-    if (!nfcState.isSupported) {
+    const currentState = nfcStateRef.current;
+    
+    if (!currentState.isSupported) {
       Alert.alert('エラー', 'NFC機能が利用できません');
       return null;
     }
@@ -265,17 +228,11 @@ const useNFCReal = () => {
       const NfcManager = require('react-native-nfc-manager').default;
       const { NfcTech } = require('react-native-nfc-manager');
       
-      console.log('NFC読み取りを開始します');
-      console.log('NfcTech定数:', NfcTech);
-      
-      // 公式ドキュメントに従った正しい実装
-      // 1. NDEF技術タイプをリクエスト（最も一般的）
+      // NDEF技術タイプをリクエスト
       await NfcManager.requestTechnology(NfcTech.Ndef);
-      console.log('NDEF技術タイプをリクエストしました');
       
-      // 2. タグ情報を取得
+      // タグ情報を取得
       const tag = await NfcManager.getTag();
-      console.log('取得したタグ情報:', tag);
       
       if (tag) {
         const result: NFCReadResult = {
@@ -292,28 +249,33 @@ const useNFCReal = () => {
           error: null 
         }));
         
-        console.log('NFC読み取り成功:', result);
+        // スキャン成功音を再生
+        if (audioState.isEnabled) {
+          (async () => {
+            try {
+              const isReady = await waitForReady();
+              if (isReady) {
+                await playSuccessSound();
+              }
+            } catch (error) {
+              // 音声エラーは無視
+            }
+          })();
+        }
         return result;
       } else {
         throw new Error('NFCタグの読み取りに失敗しました');
       }
     } catch (error: any) {
-      console.error('NFC読み取りエラー:', error);
-      
       // NDEFが失敗した場合、NfcAを試行
       if (error.message?.includes('no tech request available') || 
           error.message?.includes('NDEF')) {
-        console.log('NDEFに失敗、NfcAを試行します');
-        
         try {
           const NfcManager = require('react-native-nfc-manager').default;
           const { NfcTech } = require('react-native-nfc-manager');
           
           await NfcManager.requestTechnology(NfcTech.NfcA);
-          console.log('NfcA技術タイプをリクエストしました');
-          
           const tag = await NfcManager.getTag();
-          console.log('NfcAでタグを取得:', tag);
           
           if (tag) {
             const result: NFCReadResult = {
@@ -330,11 +292,24 @@ const useNFCReal = () => {
               error: null 
             }));
             
-            console.log('NfcAでNFC読み取り成功:', result);
+            // スキャン成功音を再生
+            if (audioState.isEnabled) {
+              (async () => {
+                try {
+                  const isReady = await waitForReady();
+                  if (isReady) {
+                    await playSuccessSound();
+                  }
+                } catch (error) {
+                  // 音声エラーは無視
+                }
+              })();
+            }
+            
             return result;
           }
         } catch (nfcAError) {
-          console.error('NfcAでも失敗:', nfcAError);
+          // NfcAも失敗
         }
       }
       
@@ -346,19 +321,13 @@ const useNFCReal = () => {
         error: errorMessage 
       }));
       
-      console.error('エラーの詳細:', {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
-      });
       return null;
     } finally {
       try {
         const NfcManager = require('react-native-nfc-manager').default;
         await NfcManager.cancelTechnologyRequest();
-        console.log('NFC技術リクエストをキャンセルしました');
       } catch (error) {
-        console.error('NFC技術リクエストのキャンセルでエラー:', error);
+        // エラーは無視
       }
     }
   };
@@ -373,6 +342,7 @@ const useNFCReal = () => {
 
 // Expo Go用のモック実装
 const useNFCMock = () => {
+  const { playSuccessSound, audioState, waitForReady } = useAudio();
   const [nfcState, setNfcState] = useState<NFCState>({
     isScanning: false,
     isSupported: true, // モックでは常にサポート
@@ -380,15 +350,23 @@ const useNFCMock = () => {
     error: null,
     isAutoScanning: false,
   });
+  
+  // 状態参照用のref
+  const nfcStateRef = useRef(nfcState);
+  
+  // 状態更新時にrefも更新
+  useEffect(() => {
+    nfcStateRef.current = nfcState;
+  }, [nfcState]);
 
   // モック用の自動スキャン機能
   const startAutoScan = useCallback(async () => {
-    if (nfcState.isAutoScanning) {
-      console.log('既にモック自動スキャンが開始されています');
+    const currentState = nfcStateRef.current;
+    
+    if (currentState.isAutoScanning) {
       return;
     }
 
-    console.log('モック自動NFCスキャンを開始します');
     setNfcState(prev => ({ ...prev, isAutoScanning: true, error: null }));
     
     // モック：5秒後に自動的にタグを検出
@@ -412,20 +390,26 @@ const useNFCMock = () => {
         error: null 
       }));
 
-      console.log('モック自動スキャンでタグを検出:', mockResult);
+      // スキャン成功音を再生
+      if (audioState.isEnabled) {
+        (async () => {
+          try {
+            const isReady = await waitForReady();
+            if (isReady) {
+              await playSuccessSound();
+            }
+          } catch (error) {
+            // 音声エラーは無視
+          }
+        })();
+      }
     }, 5000);
-  }, [nfcState.isAutoScanning]);
+  }, []);
 
   // モック用の自動スキャン停止
   const stopAutoScan = useCallback(async () => {
-    if (!nfcState.isAutoScanning) {
-      console.log('モック自動スキャンは開始されていません');
-      return;
-    }
-
-    console.log('モック自動NFCスキャンを停止します');
     setNfcState(prev => ({ ...prev, isAutoScanning: false }));
-  }, [nfcState.isAutoScanning]);
+  }, []);
 
   const readNfcTag = async (): Promise<NFCReadResult | null> => {
     setNfcState(prev => ({ ...prev, isScanning: true, error: null }));
@@ -455,18 +439,27 @@ const useNFCMock = () => {
         error: null 
       }));
 
-      console.log('モックNFC読み取り成功:', mockResult);
+      // スキャン成功音を再生
+      if (audioState.isEnabled) {
+        (async () => {
+          try {
+            const isReady = await waitForReady();
+            if (isReady) {
+              await playSuccessSound();
+            }
+          } catch (error) {
+            // 音声エラーは無視
+          }
+        })();
+      }
       return mockResult;
     } catch (error) {
-      const errorMessage = 'モックNFC読み取りでエラーが発生しました';
-      
       setNfcState(prev => ({ 
         ...prev, 
         isScanning: false, 
-        error: errorMessage 
+        error: 'モックNFC読み取りでエラーが発生しました' 
       }));
       
-      console.error('モックNFC読み取りエラー:', error);
       return null;
     }
   };

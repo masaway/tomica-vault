@@ -8,8 +8,10 @@ export const useNFCEnvironment = () => {
     // Expo Go環境では実際のNFC機能は使用できないため、モック実装を使用
     const shouldUseMockNFC = envInfo.isExpoGo;
     
-    // Development BuildやStandaloneビルドでは実際のNFC機能を使用
-    const isNFCAvailable = envInfo.isDevelopmentBuild || envInfo.appOwnership === 'standalone';
+    // Development Build、Standalone、またはプレビュービルドでは実際のNFC機能を使用
+    const isNFCAvailable = envInfo.isDevelopmentBuild || 
+                          envInfo.appOwnership === 'standalone' ||
+                          envInfo.buildType === 'Preview Build';
     
     return {
       // NFC機能の利用可否
