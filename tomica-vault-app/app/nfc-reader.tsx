@@ -24,31 +24,30 @@ export default function NFCReaderScreen() {
   // 画面フォーカス時にのみNFC機能を有効化
   useFocusEffect(
     useCallback(() => {
-      console.log('NFC Reader画面がフォーカスされました');
       setIsScreenFocused(true);
-      
-      // 環境情報をログ出力
-      logEnvironmentInfo();
-      
-      // 画面フォーカス時に自動スキャンを開始
-      if (nfcState.isSupported) {
-        startAutoScan();
-      }
       
       // 画面離脱時に自動スキャンを停止
       return () => {
-        console.log('NFC Reader画面からフォーカスが外れました');
         setIsScreenFocused(false);
         stopAutoScan();
       };
-    }, [nfcState.isSupported, startAutoScan, stopAutoScan])
+    }, [])
   );
+
+  // NFC機能の準備完了時に自動スキャンを開始
+  useEffect(() => {
+    const startScan = async () => {
+      if (isScreenFocused && nfcState.isSupported && !nfcState.isAutoScanning) {
+        await startAutoScan();
+      }
+    };
+    
+    startScan();
+  }, [isScreenFocused, nfcState.isSupported, nfcState.isAutoScanning]);
 
   // NFCタグ検出時の処理
   const handleNfcTagDetected = useCallback(async (tagId: string) => {
     try {
-      console.log('NFCタグを検出:', tagId);
-      
       // tag_idでおもちゃを検索
       const foundTomica = await getTomicaByNfcTagId(tagId);
       
@@ -72,16 +71,12 @@ export default function NFCReaderScreen() {
         
         // モーダルを表示
         setModalVisible(true);
-        
-        console.log('おもちゃが見つかりました:', foundTomica.name);
       } else {
         // おもちゃが見つからない場合
         setScannedTomicaList([]);
         setModalVisible(true);
-        console.log('おもちゃが見つかりませんでした、新規登録が必要です');
       }
     } catch (error) {
-      console.error('NFCタグ処理エラー:', error);
       Alert.alert(
         'エラー',
         'NFCタグの処理中にエラーが発生しました',
@@ -93,10 +88,7 @@ export default function NFCReaderScreen() {
   // NFCタグ検出時の処理（画面フォーカス時のみ）
   useEffect(() => {
     if (nfcState.lastResult && isScreenFocused) {
-      console.log('画面フォーカス中にNFCタグを検出:', nfcState.lastResult.id);
       handleNfcTagDetected(nfcState.lastResult.id);
-    } else if (nfcState.lastResult && !isScreenFocused) {
-      console.log('画面がフォーカスされていないため、NFCタグ処理をスキップ:', nfcState.lastResult.id);
     }
   }, [nfcState.lastResult, isScreenFocused, handleNfcTagDetected]);
 
@@ -128,7 +120,6 @@ export default function NFCReaderScreen() {
         handleCloseModal();
       }
     } catch (error) {
-      console.error('チェックアウトエラー:', error);
       Alert.alert('エラー', 'チェックアウトに失敗しました');
     }
   };
@@ -151,7 +142,6 @@ export default function NFCReaderScreen() {
         handleCloseModal();
       }
     } catch (error) {
-      console.error('チェックインエラー:', error);
       Alert.alert('エラー', 'チェックインに失敗しました');
     }
   };
@@ -205,6 +195,10 @@ export default function NFCReaderScreen() {
           <Text style={styles.subInstruction}>
             {nfcState.isAutoScanning 
               ? 'タグを近づけると自動的に読み取ります' 
+              : nfcState.isSupported
+              ? 'NFC機能が利用可能です'
+              : nfcState.error 
+              ? `エラー: ${nfcState.error}`
               : 'NFC機能を準備中...'}
           </Text>
 
