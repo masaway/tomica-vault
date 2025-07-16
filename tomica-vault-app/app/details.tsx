@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
@@ -133,111 +133,81 @@ export default function DetailsScreen() {
 
   useEffect(() => {
     const fetchTomicaDetails = async () => {
-      // 認証が完了するまで待機
-      if (authLoading) {
-        console.log('詳細画面 - 認証確認中のため待機');
-        return;
-      }
-      
-      if (!user) {
-        console.log('詳細画面 - ユーザーが認証されていません');
-        setLoading(false);
-        return;
-      }
-
-      console.log('詳細画面 - データ取得開始 params.id:', params.id);
+      if (authLoading) return;
+      if (!user) { setLoading(false); return; }
       const id = Number(params.id);
-      console.log('詳細画面 - 変換後のID:', id);
       const data = await getTomicaById(id);
-      console.log('詳細画面 - 取得したデータ:', data);
       setTomica(data);
       setLoading(false);
     };
-
     fetchTomicaDetails();
   }, [params.id, user, authLoading, getTomicaById]);
 
   const handleDelete = () => {
     if (!tomica) return;
-
     Alert.alert(
       'おもちゃの削除',
       `${tomica.name}とお別れしますか？`,
       [
-        {
-          text: '引き留める',
-          style: 'cancel',
-        },
-        {
-          text: '別れを告げる',
-          style: 'destructive',
-          onPress: () => {
-            console.log('Delete tomica:', tomica.id);
-            router.back();
-          },
-        },
+        { text: '引き留める', style: 'cancel' },
+        { text: '別れを告げる', style: 'destructive', onPress: () => { router.back(); } },
       ],
     );
   };
-
   const handleEdit = () => {
     if (!tomica) return;
-
-    router.push({
-      pathname: '/edit',
-      params: { tomica: JSON.stringify(tomica) }
-    });
+    router.push({ pathname: '/edit', params: { tomica: JSON.stringify(tomica) } });
   };
 
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.center}>
-          <Text>読み込み中...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (!tomica) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.center}>
-          <Text>おもちゃが見つかりませんでした</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButtonContainer}>
-          <Text style={styles.backButton}>戻る</Text>
+  // カスタムヘッダー
+  const CustomHeader = () => (
+    <SafeAreaView edges={['top']} style={{ backgroundColor: '#000' }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          minHeight: 56,
+          paddingHorizontal: 16,
+          backgroundColor: '#000',
+        }}
+      >
+        <TouchableOpacity onPress={() => router.back()} style={{ paddingVertical: 8, paddingRight: 16 }}>
+          <Text style={{ color: '#007AFF', fontSize: 16 }}>戻る</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>おもちゃ詳細</Text>
-        <View style={styles.headerButtons}>
-          <TouchableOpacity 
-            style={styles.headerButton}
-            onPress={handleEdit}
-          >
+        <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>おもちゃ詳細</Text>
+        <View style={{ flexDirection: 'row' }}>
+          <TouchableOpacity onPress={handleEdit} style={{ marginRight: 16 }}>
             <FontAwesome name="pencil" size={20} color="#007AFF" />
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.headerButton}
-            onPress={handleDelete}
-          >
+          <TouchableOpacity onPress={handleDelete}>
             <FontAwesome name="trash" size={20} color="#FF3B30" />
           </TouchableOpacity>
         </View>
       </View>
-      <ScrollView style={styles.content}>
-        <BasicInfoSection tomica={tomica} />
-        <MovementHistorySection tomica={tomica} />
-        <RegistrationInfoSection tomica={tomica} />
-        <MemoSection tomica={tomica} />
-      </ScrollView>
     </SafeAreaView>
+  );
+
+  // Stack.Screenでカスタムヘッダーを指定
+  return (
+    <>
+      <Stack.Screen options={{ header: () => <CustomHeader /> }} />
+      <SafeAreaView style={styles.container}>
+        {loading ? (
+          <View style={styles.center}><Text>読み込み中...</Text></View>
+        ) : !tomica ? (
+          <View style={styles.center}><Text>おもちゃが見つかりませんでした</Text></View>
+        ) : (
+          <ScrollView style={styles.content}>
+            {/* ここから下は元の画面内容。ヘッダー部分（戻る・タイトル・編集・削除）は削除済み */}
+            <BasicInfoSection tomica={tomica} />
+            <MovementHistorySection tomica={tomica} />
+            <RegistrationInfoSection tomica={tomica} />
+            <MemoSection tomica={tomica} />
+          </ScrollView>
+        )}
+      </SafeAreaView>
+    </>
   );
 }
 
