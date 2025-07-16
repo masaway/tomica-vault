@@ -1,16 +1,11 @@
-import { Tabs } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
-import { Pressable, Text, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
+import { Pressable, Text } from 'react-native';
 import { useThemeColor } from '../../hooks/useThemeColor';
 
 export default function TabLayout() {
   const router = useRouter();
   const tintColor = useThemeColor({}, 'tint');
-
-  const handleAddPress = () => {
-    router.push('/add');
-  };
 
   return (
     <Tabs screenOptions={{
@@ -32,45 +27,34 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="search"
+        name="list"
         options={{
-          title: '検索',
-          tabBarIcon: ({ color }) => <FontAwesome name="search" size={24} color={color} />,
+          title: 'おもちゃ一覧',
+          tabBarIcon: ({ color }) => <FontAwesome name="list" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="add"
         options={{
           title: '新規登録',
-          tabBarButton: (props) => (
-            <Pressable
-              onPress={handleAddPress}
-              style={({ pressed }) => [
-                {
-                  opacity: pressed ? 0.7 : 1,
-                  alignItems: 'center',
-                  flex: 1,
-                  justifyContent: 'center',
-                  paddingVertical: 8,
-                },
-              ]}
-            >
-              <FontAwesome
-                name="plus-circle"
-                size={32}
-                color={tintColor}
-                style={{ marginBottom: 2 }}
-              />
-              <Text style={{ fontSize: 10, color: tintColor }}>新規登録</Text>
-            </Pressable>
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="plus-circle" size={32} color={color} />
           ),
+          tabBarLabel: '新規登録',
         }}
+        // もし「新規登録」タブ押下時に特別な遷移が必要な場合は、下記コメントアウトを参考にしてください
+        // listeners={{
+        //   tabPress: (e) => {
+        //     e.preventDefault();
+        //     router.push('/add');
+        //   },
+        // }}
       />
       <Tabs.Screen
-        name="list"
+        name="search"
         options={{
-          title: 'おもちゃ一覧',
-          tabBarIcon: ({ color }) => <FontAwesome name="list" size={24} color={color} />,
+          title: '検索',
+          tabBarIcon: ({ color }) => <FontAwesome name="search" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
