@@ -63,59 +63,89 @@ export default function EditScreen() {
     }
   };
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButtonContainer}>
-          <Text style={styles.backButton}>キャンセル</Text>
+  // カスタムヘッダー
+  const CustomHeader = () => (
+    <SafeAreaView edges={['top']} style={{ backgroundColor: '#000' }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          minHeight: 56,
+          paddingHorizontal: 16,
+          backgroundColor: '#000',
+        }}
+      >
+        <TouchableOpacity onPress={() => router.back()} style={{ paddingVertical: 8, paddingRight: 16 }}>
+          <Text style={{ color: '#007AFF', fontSize: 16 }}>キャンセル</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>おもちゃ編集</Text>
-        <TouchableOpacity onPress={handleSave} disabled={isLoading} style={styles.saveButtonContainer}>
-          <Text style={styles.saveButton}>{isLoading ? '保存中...' : '保存'}</Text>
+        <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>おもちゃ編集</Text>
+        <TouchableOpacity onPress={handleSave} disabled={isLoading} style={{ paddingVertical: 8, paddingLeft: 16 }}>
+          <Text style={{ color: '#007AFF', fontSize: 16, fontWeight: 'bold' }}>{isLoading ? '保存中...' : '保存'}</Text>
         </TouchableOpacity>
       </View>
-      <ScrollView style={styles.content}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>基本情報</Text>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>名前</Text>
-            <TextInput
-              style={styles.input}
-              value={name}
-              onChangeText={setName}
-              placeholder="おもちゃの名前"
-              editable={!isLoading}
-            />
-          </View>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>状況</Text>
-            <View style={styles.situationButtons}>
-              {([
-                { value: '外出中', label: '行ってきます' },
-                { value: '帰宅中', label: 'ただいま' }
-              ] as const).map(({ value, label }) => (
-                <TouchableOpacity
-                  key={value}
-                  style={[
-                    styles.situationButton,
-                    situation === value && styles.situationButtonActive,
-                  ]}
-                  onPress={() => setSituation(value)}
-                  disabled={isLoading}
-                >
-                  <Text
+    </SafeAreaView>
+  );
+
+  return (
+    <>
+      <Stack.Screen options={{ header: () => <CustomHeader /> }} />
+      <SafeAreaView style={styles.container}>
+        <ScrollView style={styles.content}>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>基本情報</Text>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>名前</Text>
+              <TextInput
+                style={styles.input}
+                value={name}
+                onChangeText={setName}
+                placeholder="おもちゃの名前"
+                editable={!isLoading}
+              />
+            </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>状況</Text>
+              <View style={styles.situationButtons}>
+                {([
+                  { value: '外出中', label: '行ってきます' },
+                  { value: '帰宅中', label: 'ただいま' }
+                ] as const).map(({ value, label }) => (
+                  <TouchableOpacity
+                    key={value}
                     style={[
-                      styles.situationButtonText,
-                      situation === value && styles.situationButtonTextActive,
+                      styles.situationButton,
+                      situation === value && styles.situationButtonActive,
                     ]}
+                    onPress={() => setSituation(value)}
+                    disabled={isLoading}
                   >
-                    {label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                    <Text
+                      style={[
+                        styles.situationButtonText,
+                        situation === value && styles.situationButtonTextActive,
+                      ]}
+                    >
+                      {label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
           </View>
-          
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>メモ</Text>
+            <TextInput
+              style={styles.notesInput}
+              value={notes}
+              onChangeText={setNotes}
+              placeholder="メモを入力"
+              multiline
+              numberOfLines={4}
+              editable={!isLoading}
+            />
+            
           <View style={styles.inputGroup}>
             <Text style={styles.label}>おやすみモード</Text>
             <View style={styles.switchContainer}>
@@ -147,6 +177,7 @@ export default function EditScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
+    </>
   );
 }
 

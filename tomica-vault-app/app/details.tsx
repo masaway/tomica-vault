@@ -1,11 +1,11 @@
-import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Alert, Switch } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Alert, Platform, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { useTomica, Tomica } from '@/hooks/useTomica';
 import { useAuth } from '@/hooks/useAuth';
-import { determineTomicaSituation, Situation } from '@/utils/tomicaUtils';
+import { determineTomicaSituation } from '@/utils/tomicaUtils';
 
 // 日付を日本語形式でフォーマットする関数
 const formatDate = (dateString: string): string => {
@@ -40,14 +40,6 @@ const BasicInfoSection = ({ tomica, onToggleSleep }: { tomica: Tomica; onToggleS
         <Text style={styles.value}>{tomica.name}</Text>
       </View>
       <View style={styles.infoRow}>
-        <Text style={styles.label}>登録ID</Text>
-        <Text style={styles.value}>{tomica.id}</Text>
-      </View>
-      <View style={styles.infoRow}>
-        <Text style={styles.label}>NFC ID</Text>
-        <Text style={styles.value}>{tomica.nfc_tag_uid}</Text>
-      </View>
-      <View style={styles.infoRow}>
         <Text style={styles.label}>状況</Text>
         <Text style={[styles.value, situationStyle]}>{situation}</Text>
       </View>
@@ -65,6 +57,8 @@ const BasicInfoSection = ({ tomica, onToggleSleep }: { tomica: Tomica; onToggleS
 };
 
 // 移動履歴セクション
+// ↓このセクション全体を削除
+/*
 const MovementHistorySection = ({ tomica }: { tomica: Tomica }) => {
   const situation = determineTomicaSituation(tomica);
 
@@ -76,7 +70,6 @@ const MovementHistorySection = ({ tomica }: { tomica: Tomica }) => {
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>移動履歴</Text>
       
-      {/* 最新の帰宅中のデータを表示 */}
       {latestCheckIn && (
         <View style={styles.historyItem}>
           <Text style={styles.historyDate}>{latestCheckIn.toLocaleString('ja-JP')}</Text>
@@ -85,7 +78,6 @@ const MovementHistorySection = ({ tomica }: { tomica: Tomica }) => {
         </View>
       )}
 
-      {/* 最新の外出中のデータを表示 */}
       {latestCheckOut && (
         <View style={styles.historyItem}>
           <Text style={styles.historyDate}>{latestCheckOut.toLocaleString('ja-JP')}</Text>
@@ -96,6 +88,7 @@ const MovementHistorySection = ({ tomica }: { tomica: Tomica }) => {
     </View>
   );
 };
+*/
 
 // 登録情報セクション
 const RegistrationInfoSection = ({ tomica }: { tomica: Tomica }) => {
@@ -139,33 +132,19 @@ export default function DetailsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { user, loading: authLoading } = useAuth();
-  const { getTomicaById, toggleSleepMode } = useTomica();
+  const { getTomicaById, toggleSleepMode, deleteTomica } = useTomica();
   const [tomica, setTomica] = useState<Tomica | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchTomicaDetails = async () => {
-      // 認証が完了するまで待機
-      if (authLoading) {
-        console.log('詳細画面 - 認証確認中のため待機');
-        return;
-      }
-      
-      if (!user) {
-        console.log('詳細画面 - ユーザーが認証されていません');
-        setLoading(false);
-        return;
-      }
-
-      console.log('詳細画面 - データ取得開始 params.id:', params.id);
+      if (authLoading) return;
+      if (!user) { setLoading(false); return; }
       const id = Number(params.id);
-      console.log('詳細画面 - 変換後のID:', id);
       const data = await getTomicaById(id);
-      console.log('詳細画面 - 取得したデータ:', data);
       setTomica(data);
       setLoading(false);
     };
-
     fetchTomicaDetails();
   }, [params.id, user, authLoading, getTomicaById]);
 
@@ -183,87 +162,83 @@ export default function DetailsScreen() {
     }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!tomica) return;
-
     Alert.alert(
       'おもちゃの削除',
       `${tomica.name}とお別れしますか？`,
       [
-        {
-          text: '引き留める',
-          style: 'cancel',
-        },
-        {
-          text: '別れを告げる',
-          style: 'destructive',
-          onPress: () => {
-            console.log('Delete tomica:', tomica.id);
-            router.back();
-          },
+        { text: '引き留める', style: 'cancel' },
+        { 
+          text: '別れを告げる', 
+          style: 'destructive', 
+          onPress: async () => {
+            const success = await deleteTomica(tomica.id);
+            if (success) {
+              router.replace('/list');
+            } else {
+              Alert.alert('削除に失敗しました');
+            }
+          }
         },
       ],
     );
   };
-
   const handleEdit = () => {
     if (!tomica) return;
-
-    router.push({
-      pathname: '/edit',
-      params: { tomica: JSON.stringify(tomica) }
-    });
+    router.push({ pathname: '/edit', params: { tomica: JSON.stringify(tomica) } });
   };
 
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.center}>
-          <Text>読み込み中...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (!tomica) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.center}>
-          <Text>おもちゃが見つかりませんでした</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButtonContainer}>
-          <Text style={styles.backButton}>戻る</Text>
+  // カスタムヘッダー
+  const CustomHeader = () => (
+    <SafeAreaView edges={['top']} style={{ backgroundColor: '#000' }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          minHeight: 56,
+          paddingHorizontal: 16,
+          backgroundColor: '#000',
+        }}
+      >
+        <TouchableOpacity onPress={() => router.back()} style={{ paddingVertical: 8, paddingRight: 16 }}>
+          <Text style={{ color: '#007AFF', fontSize: 16 }}>戻る</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>おもちゃ詳細</Text>
-        <View style={styles.headerButtons}>
-          <TouchableOpacity 
-            style={styles.headerButton}
-            onPress={handleEdit}
-          >
+        <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>おもちゃ詳細</Text>
+        <View style={{ flexDirection: 'row' }}>
+          <TouchableOpacity onPress={handleEdit} style={{ marginRight: 16 }}>
             <FontAwesome name="pencil" size={20} color="#007AFF" />
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.headerButton}
-            onPress={handleDelete}
-          >
+          <TouchableOpacity onPress={handleDelete}>
             <FontAwesome name="trash" size={20} color="#FF3B30" />
           </TouchableOpacity>
         </View>
       </View>
-      <ScrollView style={styles.content}>
-        <BasicInfoSection tomica={tomica} onToggleSleep={handleToggleSleep} />
-        <MovementHistorySection tomica={tomica} />
-        <RegistrationInfoSection tomica={tomica} />
-        <MemoSection tomica={tomica} />
-      </ScrollView>
     </SafeAreaView>
+  );
+
+  // Stack.Screenでカスタムヘッダーを指定
+  return (
+    <>
+      <Stack.Screen options={{ header: () => <CustomHeader /> }} />
+      <SafeAreaView style={styles.container}>
+        {loading ? (
+          <View style={styles.center}><Text>読み込み中...</Text></View>
+        ) : !tomica ? (
+          <View style={styles.center}><Text>おもちゃが見つかりませんでした</Text></View>
+        ) : (
+          <ScrollView style={styles.content}>
+            {/* 基本情報 */}
+            <BasicInfoSection tomica={tomica} onToggleSleep={handleToggleSleep} />
+            {/* メモを移動履歴の位置（2番目）に移動 */}
+            <MemoSection tomica={tomica} />
+            {/* 登録情報 */}
+            <RegistrationInfoSection tomica={tomica} />
+          </ScrollView>
+        )}
+      </SafeAreaView>
+    </>
   );
 }
 
