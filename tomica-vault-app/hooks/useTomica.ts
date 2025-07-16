@@ -1,8 +1,8 @@
-import { useState, useCallback } from 'react';
-import { supabase, TOMICA_TABLE } from '../lib/supabase';
+import { determineTomicaSituation } from '@/utils/tomicaUtils';
+import { useCallback, useState } from 'react';
+import { supabase } from '../lib/supabase';
 import { Database } from '../types/supabase';
 import { useAuth } from './useAuth';
-import { determineTomicaSituation } from '@/utils/tomicaUtils';
 
 export type Tomica = Database['public']['Tables']['owned_tomica']['Row'];
 
@@ -341,6 +341,7 @@ export function useTomica() {
           total: 0,
           checkedOut: 0,
           checkedIn: 0,
+          missing: 0,
           recentActivity: [],
         });
         return;
@@ -542,6 +543,47 @@ export function useTomica() {
     [user]
   );
 
+  // おもちゃを削除（論理削除）
+  const deleteTomica = useCallback(
+    async (id: number) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const userId = checkAuth(); // 認証チェック
+
+        // 所有権チェック
+        const { data: ownershipData, error: ownershipError } = await supabase
+          .from('user_tomica_ownership')
+          .select('tomica_id')
+          .eq('user_id', userId)
+          .eq('tomica_id', id)
+          .single();
+
+        if (ownershipError || !ownershipData) {
+          throw new Error('このおもちゃを削除する権限がありません');
+        }
+
+        // JSTで削除日時を保存
+        const now = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().replace('Z', '+09:00');
+        const { error: updateError } = await supabase
+          .from('owned_tomica')
+          .update({ deleted_at: now, updated_at: now })
+          .eq('id', id);
+        if (updateError) throw updateError;
+
+        // ローカルリストからも削除
+        setTomicaList((prev) => prev.filter((t) => t.id !== id));
+        return true;
+      } catch (err) {
+        handleError(err);
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [user]
+  );
+
   return {
     tomicaList,
     loading,
@@ -556,5 +598,6 @@ export function useTomica() {
     calculateStats,
     addTomica,
     updateTomica,
+    deleteTomica, // 追加
   };
 } 
