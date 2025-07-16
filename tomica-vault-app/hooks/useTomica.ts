@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase, TOMICA_TABLE } from '../lib/supabase';
 import { Database } from '../types/supabase';
 import { useAuth } from './useAuth';
+import { determineTomicaSituation } from '@/utils/tomicaUtils';
 
 export type Tomica = Database['public']['Tables']['owned_tomica']['Row'];
 
@@ -9,9 +10,10 @@ export interface TomicaStats {
   total: number;
   checkedOut: number;
   checkedIn: number;
+  missing: number;
   recentActivity: {
     name: string;
-    action: 'チェックイン' | 'チェックアウト' | '家出中';
+    action: 'チェックイン' | 'チェックアウト' | 'まいご' | 'タッチ';
     timestamp: string;
   }[];
 }
@@ -272,66 +274,44 @@ export function useTomica() {
     const total = tomicaData.length;
     let checkedOut = 0;
     let checkedIn = 0;
+    let missing = 0;
     const recentActivity: TomicaStats['recentActivity'] = [];
 
     tomicaData.forEach(tomica => {
-      const { check_in_at, checked_out_at } = tomica;
+      const { scanned_at } = tomica;
+      const situation = determineTomicaSituation(tomica);
 
-      // 家出中判定
-      let isMissing = false;
-      let missingTimestamp: string | null = null;
-
-      if (check_in_at === null && checked_out_at) {
-        const checkedOutDate = new Date(checked_out_at).getTime();
-        const now = Date.now();
-        if (now - checkedOutDate >= 48 * 60 * 60 * 1000) {
-          isMissing = true;
-          // 家出中になったタイミング = checked_out_at + 48h
-          missingTimestamp = new Date(checkedOutDate + 48 * 60 * 60 * 1000).toISOString();
-        }
-      } else if (check_in_at && checked_out_at) {
-        const checkedInDate = new Date(check_in_at).getTime();
-        const checkedOutDate = new Date(checked_out_at).getTime();
-        if (checkedInDate < checkedOutDate) {
-          const now = Date.now();
-          if (now - checkedOutDate >= 48 * 60 * 60 * 1000) {
-            isMissing = true;
-            missingTimestamp = new Date(checkedOutDate + 48 * 60 * 60 * 1000).toISOString();
-          }
-        }
+      // 状態に基づいて統計を集計
+      switch (situation) {
+        case 'まいご':
+          missing++;
+          break;
+        case 'おでかけ':
+          checkedOut++;
+          break;
+        case 'おうち':
+          checkedIn++;
+          break;
       }
 
-      if (isMissing && missingTimestamp) {
+      // スキャン履歴をRecentActivityに追加
+      if (scanned_at) {
         recentActivity.push({
           name: tomica.name,
-          action: '家出中',
-          timestamp: missingTimestamp,
+          action: 'タッチ',
+          timestamp: scanned_at,
         });
-      }
-
-      // 既存の集計
-      if (check_in_at === null) {
-        checkedOut++;
-      } else if (checked_out_at === null) {
-        checkedIn++;
-      } else {
-        const checkedInDate = new Date(check_in_at).getTime();
-        const checkedOutDate = new Date(checked_out_at).getTime();
-        if (checkedInDate > checkedOutDate) {
-          checkedIn++;
-        } else {
-          checkedOut++;
-        }
       }
     });
 
-    // 家出中通知のみ最新5件
+    // スキャン履歴を最新5件に絞り込み
     recentActivity.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
     return {
       total,
       checkedOut,
       checkedIn,
+      missing,
       recentActivity: recentActivity.slice(0, 5),
     };
   }, []);
