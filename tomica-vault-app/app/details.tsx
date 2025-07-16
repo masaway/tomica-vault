@@ -36,14 +36,7 @@ const BasicInfoSection = ({ tomica }: { tomica: Tomica }) => {
         <Text style={styles.label}>名前</Text>
         <Text style={styles.value}>{tomica.name}</Text>
       </View>
-      <View style={styles.infoRow}>
-        <Text style={styles.label}>登録ID</Text>
-        <Text style={styles.value}>{tomica.id}</Text>
-      </View>
-      <View style={styles.infoRow}>
-        <Text style={styles.label}>NFC ID</Text>
-        <Text style={styles.value}>{tomica.nfc_tag_uid}</Text>
-      </View>
+      {/* 登録IDとNFC IDの表示を削除 */}
       <View style={styles.infoRow}>
         <Text style={styles.label}>状況</Text>
         <Text style={[styles.value, situationStyle]}>{situation}</Text>
@@ -53,6 +46,8 @@ const BasicInfoSection = ({ tomica }: { tomica: Tomica }) => {
 };
 
 // 移動履歴セクション
+// ↓このセクション全体を削除
+/*
 const MovementHistorySection = ({ tomica }: { tomica: Tomica }) => {
   const situation = determineTomicaSituation(tomica);
 
@@ -64,7 +59,6 @@ const MovementHistorySection = ({ tomica }: { tomica: Tomica }) => {
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>移動履歴</Text>
       
-      {/* 最新の帰宅中のデータを表示 */}
       {latestCheckIn && (
         <View style={styles.historyItem}>
           <Text style={styles.historyDate}>{latestCheckIn.toLocaleString('ja-JP')}</Text>
@@ -73,7 +67,6 @@ const MovementHistorySection = ({ tomica }: { tomica: Tomica }) => {
         </View>
       )}
 
-      {/* 最新の外出中のデータを表示 */}
       {latestCheckOut && (
         <View style={styles.historyItem}>
           <Text style={styles.historyDate}>{latestCheckOut.toLocaleString('ja-JP')}</Text>
@@ -84,6 +77,7 @@ const MovementHistorySection = ({ tomica }: { tomica: Tomica }) => {
     </View>
   );
 };
+*/
 
 // 登録情報セクション
 const RegistrationInfoSection = ({ tomica }: { tomica: Tomica }) => {
@@ -199,11 +193,12 @@ export default function DetailsScreen() {
           <View style={styles.center}><Text>おもちゃが見つかりませんでした</Text></View>
         ) : (
           <ScrollView style={styles.content}>
-            {/* ここから下は元の画面内容。ヘッダー部分（戻る・タイトル・編集・削除）は削除済み */}
+            {/* 基本情報 */}
             <BasicInfoSection tomica={tomica} />
-            <MovementHistorySection tomica={tomica} />
-            <RegistrationInfoSection tomica={tomica} />
+            {/* メモを移動履歴の位置（2番目）に移動 */}
             <MemoSection tomica={tomica} />
+            {/* 登録情報 */}
+            <RegistrationInfoSection tomica={tomica} />
           </ScrollView>
         )}
       </SafeAreaView>
