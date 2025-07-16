@@ -11,6 +11,7 @@ export interface TomicaStats {
   checkedOut: number;
   checkedIn: number;
   missing: number;
+  sleeping: number;
   recentActivity: {
     name: string;
     action: 'チェックイン' | 'チェックアウト' | 'まいご' | 'タッチ';
@@ -275,6 +276,7 @@ export function useTomica() {
     let checkedOut = 0;
     let checkedIn = 0;
     let missing = 0;
+    let sleeping = 0;
     const recentActivity: TomicaStats['recentActivity'] = [];
 
     tomicaData.forEach(tomica => {
@@ -291,6 +293,9 @@ export function useTomica() {
           break;
         case 'おうち':
           checkedIn++;
+          break;
+        case 'おやすみ':
+          sleeping++;
           break;
       }
 
@@ -312,6 +317,7 @@ export function useTomica() {
       checkedOut,
       checkedIn,
       missing,
+      sleeping,
       recentActivity: recentActivity.slice(0, 5),
     };
   }, []);
@@ -342,6 +348,7 @@ export function useTomica() {
           checkedOut: 0,
           checkedIn: 0,
           missing: 0,
+          sleeping: 0,
           recentActivity: [],
         });
         return;
@@ -543,6 +550,54 @@ export function useTomica() {
     [user]
   );
 
+  // おやすみモードの切り替え
+  const toggleSleepMode = useCallback(
+    async (id: number, isSleeping: boolean) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const userId = checkAuth(); // 認証チェック
+
+        // 所有権チェック
+        const { data: ownershipData, error: ownershipError } = await supabase
+          .from('user_tomica_ownership')
+          .select('tomica_id')
+          .eq('user_id', userId)
+          .eq('tomica_id', id)
+          .single();
+        
+        if (ownershipError || !ownershipData) {
+          throw new Error('このおもちゃを更新する権限がありません');
+        }
+
+        // JSTで保存
+        const now = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().replace('Z', '+09:00');
+
+        const { error: updateError } = await supabase
+          .from('owned_tomica')
+          .update({
+            is_sleeping: isSleeping,
+            updated_at: now,
+          })
+          .eq('id', id);
+
+        if (updateError) {
+          throw updateError;
+        }
+
+        // 最新のリストを取得して反映
+        await fetchTomicaList();
+        await fetchStats();
+      } catch (err) {
+        console.error('toggleSleepMode エラー:', err);
+        setError(err instanceof Error ? err.message : 'おやすみモードの変更に失敗しました');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [user, fetchTomicaList, fetchStats]
+  );
+
   // おもちゃを削除（論理削除）
   const deleteTomica = useCallback(
     async (id: number) => {
@@ -598,6 +653,7 @@ export function useTomica() {
     calculateStats,
     addTomica,
     updateTomica,
-    deleteTomica, // 追加
+    toggleSleepMode,
+    deleteTomica,
   };
 } 

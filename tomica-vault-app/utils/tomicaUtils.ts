@@ -1,16 +1,21 @@
 import { Tomica } from '../hooks/useTomica';
 
-export type Situation = 'まいご' | 'おでかけ' | 'おうち';
+export type Situation = 'まいご' | 'おでかけ' | 'おうち' | 'おやすみ';
 
 /**
  * トミカの状態を判断する共通関数
  * @param tomica トミカオブジェクト
- * @returns 状態（まいご、おでかけ、おうち）
+ * @returns 状態（まいご、おでかけ、おうち、おやすみ）
  */
 export const determineTomicaSituation = (tomica: Tomica): Situation => {
-  const { check_in_at, checked_out_at, scanned_at } = tomica;
+  const { check_in_at, checked_out_at, scanned_at, is_sleeping } = tomica;
 
-  // まいご判定（scanned_atベース）
+  // おやすみ状態の場合は最優先で返す
+  if (is_sleeping === true) {
+    return 'おやすみ';
+  }
+
+  // まいご判定（scanned_atベース）- おやすみ状態でない場合のみ
   if (scanned_at === null) {
     // 一度もスキャンされていない場合、作成から48時間経過したらまいご
     const createdDate = new Date(tomica.created_at).getTime();
@@ -50,4 +55,5 @@ export const situationOrder: Record<Situation, number> = {
   'まいご': 0,
   'おでかけ': 1,
   'おうち': 2,
+  'おやすみ': 3,
 };

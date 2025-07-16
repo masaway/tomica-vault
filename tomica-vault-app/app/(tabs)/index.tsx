@@ -133,14 +133,15 @@ export default function HomeScreen() {
                   title="おもちゃ図鑑"
                   value={stats.total}
                   icon="car-sport"
-                  gradientColors={['#FF6B6B', '#FF8E53']}
+                  gradientColors={['#9C88FF', '#8976D4']}
                   onPress={() => navigateToList()}
+                  subtitle={`おやすみ: ${stats.sleeping}`}
                 />
                 <DashboardCard
                   title="おでかけ中"
                   value={stats.checkedOut}
                   icon="car"
-                  gradientColors={['#4ECDC4', '#44A08D']}
+                  gradientColors={['#FF6B6B', '#FF8E53']}
                   onPress={() => navigateToList('おでかけ')}
                 />
               </View>
@@ -149,7 +150,7 @@ export default function HomeScreen() {
                   title="おうちにいるよ"
                   value={stats.checkedIn}
                   icon="home"
-                  gradientColors={['#9C88FF', '#8976D4']}
+                  gradientColors={['#66BB6A', '#4CAF50']}
                   onPress={() => navigateToList('おうち')}
                 />
                 <DashboardCard

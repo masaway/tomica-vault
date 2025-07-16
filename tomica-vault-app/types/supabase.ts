@@ -21,6 +21,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           id: number
+          is_sleeping: boolean | null
           memo: string | null
           name: string
           nfc_tag_uid: string
@@ -34,6 +35,7 @@ export type Database = {
           created_at: string
           deleted_at?: string | null
           id?: number
+          is_sleeping?: boolean | null
           memo?: string | null
           name: string
           nfc_tag_uid: string
@@ -47,6 +49,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           id?: number
+          is_sleeping?: boolean | null
           memo?: string | null
           name?: string
           nfc_tag_uid?: string

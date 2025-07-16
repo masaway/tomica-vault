@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, TextInput, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, View, Text, TextInput, ScrollView, TouchableOpacity, Alert, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
@@ -15,7 +15,8 @@ export default function EditScreen() {
     tomica.checked_out_at && (!tomica.check_in_at || new Date(tomica.checked_out_at) > new Date(tomica.check_in_at)) ? '外出中' : '帰宅中'
   );
   const [notes, setNotes] = useState(tomica.memo || '');
-  const { updateTomica } = useTomica();
+  const [isSleeping, setIsSleeping] = useState(tomica.is_sleeping === true);
+  const { updateTomica, toggleSleepMode } = useTomica();
   const [isLoading, setIsLoading] = useState(false);
 
   // 編集後に最新詳細画面へ遷移するナビゲーション処理を関数化
@@ -36,17 +37,25 @@ export default function EditScreen() {
     }
     try {
       setIsLoading(true);
+      
+      // まず基本情報を更新
       const result = await updateTomica(tomica.id, { name, situation, notes });
-      if (result) {
-        Alert.alert('成功', '保存しました', [
-          {
-            text: 'OK',
-            onPress: () => navigateToLatestDetails(router, tomica.id)
-          }
-        ]);
-      } else {
+      if (!result) {
         Alert.alert('エラー', '保存に失敗しました');
+        return;
       }
+      
+      // おやすみモードの状態が変わった場合は更新
+      if (isSleeping !== (tomica.is_sleeping === true)) {
+        await toggleSleepMode(tomica.id, isSleeping);
+      }
+      
+      Alert.alert('成功', '保存しました', [
+        {
+          text: 'OK',
+          onPress: () => navigateToLatestDetails(router, tomica.id)
+        }
+      ]);
     } catch (error) {
       Alert.alert('エラー', '保存に失敗しました');
     } finally {
@@ -136,9 +145,38 @@ export default function EditScreen() {
               numberOfLines={4}
               editable={!isLoading}
             />
+            
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>おやすみモード</Text>
+            <View style={styles.switchContainer}>
+              <Switch
+                value={isSleeping}
+                onValueChange={setIsSleeping}
+                trackColor={{ false: '#767577', true: '#81b0ff' }}
+                thumbColor={isSleeping ? '#f5dd4b' : '#f4f3f4'}
+                disabled={isLoading}
+              />
+              <Text style={styles.switchLabel}>
+                {isSleeping ? 'おやすみ中' : '通常モード'}
+              </Text>
+            </View>
           </View>
-        </ScrollView>
-      </SafeAreaView>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>メモ</Text>
+          <TextInput
+            style={styles.notesInput}
+            value={notes}
+            onChangeText={setNotes}
+            placeholder="メモを入力"
+            multiline
+            numberOfLines={4}
+            editable={!isLoading}
+          />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
     </>
   );
 }
@@ -238,5 +276,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     height: 120,
     textAlignVertical: 'top',
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  switchLabel: {
+    fontSize: 16,
+    color: '#333',
   },
 }); 

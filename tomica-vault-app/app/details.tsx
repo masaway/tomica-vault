@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Alert, Platform, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
@@ -13,7 +13,7 @@ const formatDate = (dateString: string): string => {
 };
 
 // 基本情報セクション
-const BasicInfoSection = ({ tomica }: { tomica: Tomica }) => {
+const BasicInfoSection = ({ tomica, onToggleSleep }: { tomica: Tomica; onToggleSleep: (isSleeping: boolean) => void }) => {
   const situation = determineTomicaSituation(tomica);
   let situationStyle;
   switch (situation) {
@@ -22,6 +22,9 @@ const BasicInfoSection = ({ tomica }: { tomica: Tomica }) => {
       break;
     case 'まいご':
       situationStyle = styles.situationMissing;
+      break;
+    case 'おやすみ':
+      situationStyle = styles.situationSleeping;
       break;
     case 'おうち':
     default:
@@ -39,6 +42,15 @@ const BasicInfoSection = ({ tomica }: { tomica: Tomica }) => {
       <View style={styles.infoRow}>
         <Text style={styles.label}>状況</Text>
         <Text style={[styles.value, situationStyle]}>{situation}</Text>
+      </View>
+      <View style={styles.infoRow}>
+        <Text style={styles.label}>おやすみモード</Text>
+        <Switch
+          value={tomica.is_sleeping === true}
+          onValueChange={onToggleSleep}
+          trackColor={{ false: '#767577', true: '#81b0ff' }}
+          thumbColor={tomica.is_sleeping === true ? '#f5dd4b' : '#f4f3f4'}
+        />
       </View>
     </View>
   );
@@ -120,7 +132,7 @@ export default function DetailsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { user, loading: authLoading } = useAuth();
-  const { getTomicaById, deleteTomica } = useTomica();
+  const { getTomicaById, toggleSleepMode, deleteTomica } = useTomica();
   const [tomica, setTomica] = useState<Tomica | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -135,6 +147,20 @@ export default function DetailsScreen() {
     };
     fetchTomicaDetails();
   }, [params.id, user, authLoading, getTomicaById]);
+
+  const handleToggleSleep = async (isSleeping: boolean) => {
+    if (!tomica) return;
+    
+    try {
+      await toggleSleepMode(tomica.id, isSleeping);
+      // データを再取得して画面を更新
+      const updatedData = await getTomicaById(tomica.id);
+      setTomica(updatedData);
+    } catch (error) {
+      console.error('おやすみモード切り替えエラー:', error);
+      Alert.alert('エラー', 'おやすみモードの切り替えに失敗しました');
+    }
+  };
 
   const handleDelete = async () => {
     if (!tomica) return;
@@ -204,7 +230,7 @@ export default function DetailsScreen() {
         ) : (
           <ScrollView style={styles.content}>
             {/* 基本情報 */}
-            <BasicInfoSection tomica={tomica} />
+            <BasicInfoSection tomica={tomica} onToggleSleep={handleToggleSleep} />
             {/* メモを移動履歴の位置（2番目）に移動 */}
             <MemoSection tomica={tomica} />
             {/* 登録情報 */}
@@ -288,6 +314,15 @@ const styles = StyleSheet.create({
   situationMissing: {
     backgroundColor: '#ffebee', // 薄い赤
     color: '#d32f2f',           // 赤
+    fontWeight: 'bold',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+  },
+  situationSleeping: {
+    backgroundColor: '#f5f5f5', // 薄いグレー
+    color: '#757575',           // グレー
     fontWeight: 'bold',
     paddingHorizontal: 8,
     paddingVertical: 4,

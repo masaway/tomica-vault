@@ -12,7 +12,7 @@ import NFCModal from '@/components/NFCModal';
 export default function NFCReaderScreen() {
   const { nfcState, startAutoScan, stopAutoScan } = useNFC();
   const { environmentName, isNFCAvailable } = useNFCEnvironment();
-  const { getTomicaByNfcTagId, updateNfcScanTime, updateTomica } = useTomica();
+  const { getTomicaByNfcTagId, updateNfcScanTime, updateTomica, toggleSleepMode } = useTomica();
   
   // モーダル状態管理
   const [modalVisible, setModalVisible] = useState(false);
@@ -264,6 +264,16 @@ export default function NFCReaderScreen() {
         tomicaList={scannedTomicaList}
         onCheckOut={handleCheckOut}
         onCheckIn={handleCheckIn}
+        onToggleSleep={async (tomica: Tomica) => {
+          try {
+            await toggleSleepMode(tomica.id, !tomica.is_sleeping);
+            // モーダルを閉じて画面を更新
+            handleCloseModal();
+            Alert.alert('成功', `${tomica.name}の状態を変更しました`);
+          } catch (error) {
+            Alert.alert('エラー', '状態の変更に失敗しました');
+          }
+        }}
         scannedNfcTagId={nfcState.lastResult?.id}
       />
     </SafeAreaView>
