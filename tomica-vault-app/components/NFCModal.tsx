@@ -39,6 +39,34 @@ export default function NFCModal({
     router.push(`/details?id=${tomica.id}`);
   };
 
+  const getStatusBadgeStyle = (situation: string) => {
+    switch (situation) {
+      case 'おでかけ':
+        return styles.situationOutBadge;
+      case 'まいご':
+        return styles.situationMissingBadge;
+      case 'おやすみ':
+        return styles.situationSleepingBadge;
+      case 'おうち':
+      default:
+        return styles.situationReturningBadge;
+    }
+  };
+
+  const getStatusTextStyle = (situation: string) => {
+    switch (situation) {
+      case 'おでかけ':
+        return styles.situationOutText;
+      case 'まいご':
+        return styles.situationMissingText;
+      case 'おやすみ':
+        return styles.situationSleepingText;
+      case 'おうち':
+      default:
+        return styles.situationReturningText;
+    }
+  };
+
   const isCheckedOut = (tomica: Tomica) => {
     const { check_in_at, checked_out_at } = tomica;
     
@@ -63,9 +91,14 @@ export default function NFCModal({
     return (
       <View key={tomica.id} style={[styles.tomicaCard, index > 0 && styles.additionalCard]}>
         <View style={styles.cardHeader}>
-          <Text style={styles.tomicaName}>{tomica.name}</Text>
-          <View style={[styles.statusBadge, situation === 'おでかけ' ? styles.checkedOutBadge : styles.checkedInBadge]}>
-            <Text style={[styles.statusText, situation === 'おでかけ' ? styles.checkedOutText : styles.checkedInText]}>
+          <TouchableOpacity 
+            style={styles.tomicaNameContainer}
+            onPress={() => handleViewDetails(tomica)}
+          >
+            <Text style={styles.tomicaName}>{tomica.name}</Text>
+          </TouchableOpacity>
+          <View style={[styles.statusBadge, getStatusBadgeStyle(situation)]}>
+            <Text style={[styles.statusText, getStatusTextStyle(situation)]}>
               {situation}
             </Text>
           </View>
@@ -86,18 +119,21 @@ export default function NFCModal({
               size={20}
               color={canComeHome ? "#fff" : "#ccc"}
             />
-            <Text style={[
-              styles.primaryButtonText,
-              !canComeHome && styles.disabledButtonText
-            ]}>
-              ただいま
+            <Text 
+              style={[
+                styles.primaryButtonText,
+                !canComeHome && styles.disabledButtonText
+              ]}
+              numberOfLines={1}
+            >
+              おうち
             </Text>
           </TouchableOpacity>
           
           <TouchableOpacity
             style={[
               styles.actionButton, 
-              styles.secondaryButton,
+              styles.goOutButton,
               !canGoOut && styles.disabledSecondaryButton
             ]}
             onPress={() => canGoOut ? onCheckOut(tomica) : null}
@@ -106,13 +142,16 @@ export default function NFCModal({
             <Ionicons 
               name="exit" 
               size={20} 
-              color={canGoOut ? "#007AFF" : "#ccc"} 
+              color={canGoOut ? "#ff9800" : "#ccc"} 
             />
-            <Text style={[
-              styles.secondaryButtonText,
-              !canGoOut && styles.disabledButtonText
-            ]}>
-              いってきます
+            <Text 
+              style={[
+                styles.goOutButtonText,
+                !canGoOut && styles.disabledButtonText
+              ]}
+              numberOfLines={1}
+            >
+              おでかけ
             </Text>
           </TouchableOpacity>
           
@@ -123,9 +162,9 @@ export default function NFCModal({
             <Ionicons 
               name={situation === 'おやすみ' ? 'sunny' : 'moon'} 
               size={20} 
-              color="#666" 
+              color="#1976d2" 
             />
-            <Text style={styles.sleepButtonText}>
+            <Text style={styles.sleepButtonText} numberOfLines={1}>
               {situation === 'おやすみ' ? 'おこす' : 'おやすみ'}
             </Text>
           </TouchableOpacity>
@@ -212,9 +251,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 20,
     maxHeight: screenHeight * 0.9,
-    minHeight: 400,
+    minHeight: 450,
     width: '100%',
-    maxWidth: screenWidth > 600 ? 600 : 500,
+    maxWidth: screenWidth > 600 ? 700 : 600,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -259,37 +298,52 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
+  tomicaNameContainer: {
+    flex: 1,
+    marginRight: 12,
+    paddingVertical: 4,
+  },
   tomicaName: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
-    flex: 1,
-    marginRight: 12,
   },
   statusBadge: {
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
   },
-  checkedOutBadge: {
-    backgroundColor: '#ffe6e6',
+  situationOutBadge: {
+    backgroundColor: '#fff3e0',
   },
-  checkedInBadge: {
-    backgroundColor: '#e6f3ff',
+  situationReturningBadge: {
+    backgroundColor: '#e8f5e9',
+  },
+  situationMissingBadge: {
+    backgroundColor: '#ffebee',
+  },
+  situationSleepingBadge: {
+    backgroundColor: '#e3f2fd',
   },
   statusText: {
     fontSize: 12,
     fontWeight: '600',
   },
-  checkedOutText: {
-    color: '#d63031',
+  situationOutText: {
+    color: '#e65100',
   },
-  checkedInText: {
-    color: '#0984e3',
+  situationReturningText: {
+    color: '#2e7d32',
+  },
+  situationMissingText: {
+    color: '#d32f2f',
+  },
+  situationSleepingText: {
+    color: '#1976d2',
   },
   cardActions: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
   },
   actionButton: {
     flex: 1,
@@ -297,17 +351,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
     borderRadius: 8,
-    gap: 8,
+    gap: 6,
+    minWidth: 0,
   },
   primaryButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#2e7d32', // おうちボタン - グリーン
   },
   secondaryButton: {
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#007AFF',
+    borderColor: '#ff9800', // おでかけボタン - オレンジ
+  },
+  goOutButton: {
+    backgroundColor: '#fff3e0',
+    borderWidth: 1,
+    borderColor: '#ff9800',
   },
   disabledButton: {
     backgroundColor: '#f5f5f5',
@@ -320,16 +380,15 @@ const styles = StyleSheet.create({
     color: '#ccc',
   },
   sleepButton: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#e3f2fd', // 薄い青系でおやすみを表現
     borderWidth: 1,
-    borderColor: '#ddd',
-    flex: 0,
-    width: '100%',
-    marginTop: 8,
+    borderColor: '#90caf9',
   },
   sleepButtonText: {
-    color: '#666',
-    fontSize: 14,
+    color: '#1976d2', // はっきりとした青色
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   fullWidthButton: {
     flex: 0,
@@ -338,13 +397,20 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  secondaryButtonText: {
+    color: '#ff9800', // おでかけボタンテキスト - オレンジ
     fontSize: 14,
     fontWeight: '600',
   },
-  secondaryButtonText: {
-    color: '#007AFF',
-    fontSize: 14,
+  goOutButtonText: {
+    color: '#ff9800',
+    fontSize: 13,
     fontWeight: '600',
+    textAlign: 'center',
   },
   memoContainer: {
     marginTop: 12,

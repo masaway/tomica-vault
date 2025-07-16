@@ -12,7 +12,7 @@ export function NFCShortcut() {
 
   return (
     <TouchableOpacity 
-      style={[styles.nfcButton, { bottom: insets.bottom + 90 }]}
+      style={[styles.nfcButton, { bottom: insets.bottom + 20 }]}
       onPress={handleNFCPress}
     >
       <Ionicons name="scan" size={24} color="#fff" />

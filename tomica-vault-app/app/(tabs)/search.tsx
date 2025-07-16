@@ -1,6 +1,5 @@
 // app/(tabs)/search.tsx
 import { StyleSheet, View, Text, TextInput, FlatList, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { NFCShortcut } from '../../components/NFCShortcut';
 import { TomicaItem } from '../../components/TomicaItem';
 import { useEffect, useState } from 'react';
@@ -54,7 +53,7 @@ export default function SearchScreen() {
   });
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor }]}>
+    <View style={[styles.container, { backgroundColor }]}>
       <View style={styles.header}>
         <TextInput
           style={[
@@ -84,7 +83,7 @@ export default function SearchScreen() {
         )}
       </View>
       <NFCShortcut />
-    </SafeAreaView>
+    </View>
   );
 }
 

@@ -372,9 +372,9 @@ const useNFCMock = () => {
     // モック：5秒後に自動的にタグを検出
     setTimeout(() => {
       const mockResult: NFCReadResult = {
-        id: 'MOCK_AUTO_' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+        id: '12345',
         data: JSON.stringify({
-          id: 'MOCK_AUTO_' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+          id: '12345',
           type: 'MockNFC_Auto',
           platform: Platform.OS,
           timestamp: new Date().toISOString(),
@@ -420,9 +420,9 @@ const useNFCMock = () => {
     try {
       // モックデータを生成
       const mockResult: NFCReadResult = {
-        id: 'MOCK_' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+        id: '12345',
         data: JSON.stringify({
-          id: 'MOCK_' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+          id: '12345',
           type: 'MockNFC',
           platform: Platform.OS,
           timestamp: new Date().toISOString(),

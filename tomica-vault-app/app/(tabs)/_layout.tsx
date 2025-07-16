@@ -1,21 +1,30 @@
 import { FontAwesome } from '@expo/vector-icons';
-import { Tabs, useRouter } from 'expo-router';
-import { Pressable, Text } from 'react-native';
+import { Tabs } from 'expo-router';
 import { useThemeColor } from '../../hooks/useThemeColor';
 
 export default function TabLayout() {
-  const router = useRouter();
   const tintColor = useThemeColor({}, 'tint');
 
   return (
     <Tabs screenOptions={{
       tabBarActiveTintColor: tintColor,
       tabBarStyle: {
-        justifyContent: 'space-between',
         paddingHorizontal: 0,
+        height: 100,
+        paddingBottom: 10,
+        paddingTop: 10,
       },
       tabBarLabelStyle: {
-        fontSize: 10,
+        fontSize: 11,
+        marginTop: 4,
+        fontWeight: '500',
+      },
+      tabBarItemStyle: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 4,
+        paddingHorizontal: 4,
       },
     }}>
       <Tabs.Screen
@@ -23,24 +32,24 @@ export default function TabLayout() {
         options={{
           title: 'ホーム',
           headerShown: false,
-          tabBarIcon: ({ color }) => <FontAwesome name="home" size={24} color={color} />,
+          tabBarIcon: ({ color }) => <FontAwesome name="home" size={28} color={color} />,
         }}
       />
       <Tabs.Screen
         name="list"
         options={{
-          title: 'おもちゃ一覧',
-          tabBarIcon: ({ color }) => <FontAwesome name="list" size={24} color={color} />,
+          title: '一覧',
+          tabBarIcon: ({ color }) => <FontAwesome name="list" size={28} color={color} />,
         }}
       />
       <Tabs.Screen
         name="add"
         options={{
-          title: '新規登録',
+          title: '追加',
           tabBarIcon: ({ color }) => (
-            <FontAwesome name="plus-circle" size={32} color={color} />
+            <FontAwesome name="plus-circle" size={28} color={color} />
           ),
-          tabBarLabel: '新規登録',
+          tabBarLabel: '追加',
         }}
         // もし「新規登録」タブ押下時に特別な遷移が必要な場合は、下記コメントアウトを参考にしてください
         // listeners={{
@@ -54,14 +63,14 @@ export default function TabLayout() {
         name="search"
         options={{
           title: '検索',
-          tabBarIcon: ({ color }) => <FontAwesome name="search" size={24} color={color} />,
+          tabBarIcon: ({ color }) => <FontAwesome name="search" size={28} color={color} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: '設定',
-          tabBarIcon: ({ color }) => <FontAwesome name="cog" size={24} color={color} />,
+          tabBarIcon: ({ color }) => <FontAwesome name="cog" size={28} color={color} />,
         }}
       />
     </Tabs>

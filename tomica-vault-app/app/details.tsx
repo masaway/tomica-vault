@@ -206,14 +206,7 @@ export default function DetailsScreen() {
           <Text style={{ color: '#007AFF', fontSize: 16 }}>戻る</Text>
         </TouchableOpacity>
         <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>おもちゃ詳細</Text>
-        <View style={{ flexDirection: 'row' }}>
-          <TouchableOpacity onPress={handleEdit} style={{ marginRight: 16 }}>
-            <FontAwesome name="pencil" size={20} color="#007AFF" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleDelete}>
-            <FontAwesome name="trash" size={20} color="#FF3B30" />
-          </TouchableOpacity>
-        </View>
+        <View style={{ width: 60 }} />
       </View>
     </SafeAreaView>
   );
@@ -222,22 +215,40 @@ export default function DetailsScreen() {
   return (
     <>
       <Stack.Screen options={{ header: () => <CustomHeader /> }} />
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         {loading ? (
           <View style={styles.center}><Text>読み込み中...</Text></View>
         ) : !tomica ? (
           <View style={styles.center}><Text>おもちゃが見つかりませんでした</Text></View>
         ) : (
-          <ScrollView style={styles.content}>
-            {/* 基本情報 */}
-            <BasicInfoSection tomica={tomica} onToggleSleep={handleToggleSleep} />
-            {/* メモを移動履歴の位置（2番目）に移動 */}
-            <MemoSection tomica={tomica} />
-            {/* 登録情報 */}
-            <RegistrationInfoSection tomica={tomica} />
-          </ScrollView>
+          <>
+            <ScrollView style={styles.content}>
+              {/* 基本情報 */}
+              <BasicInfoSection tomica={tomica} onToggleSleep={handleToggleSleep} />
+              {/* メモを移動履歴の位置（2番目）に移動 */}
+              <MemoSection tomica={tomica} />
+              {/* 登録情報 */}
+              <RegistrationInfoSection tomica={tomica} />
+            </ScrollView>
+            <View style={styles.bottomButtonContainer}>
+              <TouchableOpacity 
+                style={[styles.bottomButton, styles.editButton]} 
+                onPress={handleEdit}
+              >
+                <FontAwesome name="pencil" size={16} color="#fff" />
+                <Text style={styles.bottomButtonText}>編集</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.bottomButton, styles.deleteButton]} 
+                onPress={handleDelete}
+              >
+                <FontAwesome name="trash" size={16} color="#fff" />
+                <Text style={styles.bottomButtonText}>削除</Text>
+              </TouchableOpacity>
+            </View>
+          </>
         )}
-      </SafeAreaView>
+      </View>
     </>
   );
 }
@@ -321,8 +332,8 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   situationSleeping: {
-    backgroundColor: '#f5f5f5', // 薄いグレー
-    color: '#757575',           // グレー
+    backgroundColor: '#e3f2fd', // 薄い青
+    color: '#1976d2',           // 青
     fontWeight: 'bold',
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -363,5 +374,34 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  bottomButtonContainer: {
+    flexDirection: 'row',
+    padding: 16,
+    paddingBottom: 32,
+    gap: 12,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  bottomButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 8,
+    gap: 8,
+  },
+  editButton: {
+    backgroundColor: '#007AFF',
+  },
+  deleteButton: {
+    backgroundColor: '#FF3B30',
+  },
+  bottomButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 }); 

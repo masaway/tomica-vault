@@ -1,5 +1,4 @@
-import { StyleSheet, View, Text, FlatList, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet, View, Text, FlatList, TouchableOpacity, ScrollView } from 'react-native';
 import { useEffect, useState } from 'react';
 import { NFCShortcut } from '../../components/NFCShortcut';
 import { useTomica, Tomica } from '@/hooks/useTomica';
@@ -63,7 +62,7 @@ export default function ListScreen() {
   });
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor }]}>
+    <View style={[styles.container, { backgroundColor }]}>
       {/* フィルタカード */}
       <View style={styles.filterRow}>
         {['all', 'おうち', 'おでかけ', 'まいご', 'おやすみ'].map((key) => (
@@ -106,7 +105,7 @@ export default function ListScreen() {
         />
       )}
       <NFCShortcut />
-    </SafeAreaView>
+    </View>
   );
 }
 

@@ -70,7 +70,7 @@ export default function HomeScreen() {
 
   if (loading && !refreshing) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor }]} edges={['top', 'left', 'right']}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={tintColor} />
           <Text style={[styles.loadingText, { color: textColor }]}>読み込み中...</Text>
@@ -81,7 +81,7 @@ export default function HomeScreen() {
 
   if (error) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor }]} edges={['top', 'left', 'right']}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
         </View>
@@ -90,7 +90,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor }]} edges={['top', 'left', 'right']}>
       <LinearGradient
         colors={[gradientStart, tintColor, gradientEnd]}
         style={styles.headerGradient}

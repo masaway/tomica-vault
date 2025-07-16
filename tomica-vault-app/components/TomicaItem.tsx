@@ -120,8 +120,8 @@ const styles = StyleSheet.create({
     color: '#d32f2f',
   },
   situationSleeping: {
-    backgroundColor: '#f5f5f5',
-    color: '#757575',
+    backgroundColor: '#e3f2fd',
+    color: '#1976d2',
   },
   updateInfo: {
     fontSize: 14,

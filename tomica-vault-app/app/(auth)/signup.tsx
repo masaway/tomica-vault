@@ -412,23 +412,28 @@ const styles = StyleSheet.create({
   },
   footer: {
     alignItems: 'center',
+    marginTop: 40,
+    paddingVertical: 20,
   },
   loginText: {
     color: 'white',
     fontSize: 16,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   loginButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 12,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+    paddingHorizontal: 32,
+    paddingVertical: 16,
     borderWidth: 1,
     borderColor: 'white',
+    minHeight: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   loginButtonText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
   },
 });

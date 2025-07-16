@@ -80,9 +80,7 @@ export default function EditScreen() {
           <Text style={{ color: '#007AFF', fontSize: 16 }}>キャンセル</Text>
         </TouchableOpacity>
         <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>おもちゃ編集</Text>
-        <TouchableOpacity onPress={handleSave} disabled={isLoading} style={{ paddingVertical: 8, paddingLeft: 16 }}>
-          <Text style={{ color: '#007AFF', fontSize: 16, fontWeight: 'bold' }}>{isLoading ? '保存中...' : '保存'}</Text>
-        </TouchableOpacity>
+        <View style={{ width: 60 }} />
       </View>
     </SafeAreaView>
   );
@@ -90,7 +88,7 @@ export default function EditScreen() {
   return (
     <>
       <Stack.Screen options={{ header: () => <CustomHeader /> }} />
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <ScrollView style={styles.content}>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>基本情報</Text>
@@ -162,21 +160,26 @@ export default function EditScreen() {
             </View>
           </View>
         </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>メモ</Text>
-          <TextInput
-            style={styles.notesInput}
-            value={notes}
-            onChangeText={setNotes}
-            placeholder="メモを入力"
-            multiline
-            numberOfLines={4}
-            editable={!isLoading}
-          />
-        </View>
       </ScrollView>
-    </SafeAreaView>
+      <View style={styles.bottomButtonContainer}>
+        <TouchableOpacity 
+          style={[styles.bottomButton, styles.cancelButton]} 
+          onPress={() => router.back()}
+          disabled={isLoading}
+        >
+          <Text style={styles.bottomButtonText}>キャンセル</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.bottomButton, styles.saveButton]} 
+          onPress={handleSave}
+          disabled={isLoading}
+        >
+          <Text style={styles.bottomButtonText}>
+            {isLoading ? '保存中...' : '保存'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
     </>
   );
 }
@@ -285,5 +288,32 @@ const styles = StyleSheet.create({
   switchLabel: {
     fontSize: 16,
     color: '#333',
+  },
+  bottomButtonContainer: {
+    flexDirection: 'row',
+    padding: 16,
+    paddingBottom: 32,
+    gap: 12,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  bottomButton: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 8,
+  },
+  cancelButton: {
+    backgroundColor: '#6c757d',
+  },
+  saveButton: {
+    backgroundColor: '#007AFF',
+  },
+  bottomButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 }); 

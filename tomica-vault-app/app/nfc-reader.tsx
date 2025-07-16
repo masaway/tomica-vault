@@ -1,6 +1,6 @@
-import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router, useFocusEffect } from 'expo-router';
+import { Stack, router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState, useCallback } from 'react';
 import { useNFC } from '@/hooks/useNFC';
@@ -144,16 +144,34 @@ export default function NFCReaderScreen() {
     }
   };
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#007AFF" />
+  // カスタムヘッダー
+  const CustomHeader = () => (
+    <SafeAreaView edges={['top']} style={{ backgroundColor: '#000' }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          minHeight: 56,
+          paddingHorizontal: 16,
+          backgroundColor: '#000',
+        }}
+      >
+        <TouchableOpacity onPress={() => router.back()} style={{ paddingVertical: 8, paddingRight: 16 }}>
+          <Text style={{ color: '#007AFF', fontSize: 16 }}>戻る</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>おもちゃタッチ</Text>
+        <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>おもちゃタッチ</Text>
+        <View style={{ width: 50 }} />
       </View>
+    </SafeAreaView>
+  );
+
+  return (
+    <>
+      <Stack.Screen options={{ header: () => <CustomHeader /> }} />
+      <View style={styles.container}>
       
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <View style={styles.content}>
         {/* 環境情報表示 */}
         <View style={styles.environmentInfo}>
           <Text style={styles.environmentText}>
@@ -217,45 +235,7 @@ export default function NFCReaderScreen() {
           )}
         </View>
 
-        {/* 読み取り結果表示 - 画面中央に配置 */}
-        {nfcState.lastResult && (
-          <View style={styles.resultContainer}>
-            <Text style={styles.resultTitle}>タッチけっか</Text>
-            
-            <View style={styles.resultItem}>
-              <Text style={styles.resultLabel}>タグID:</Text>
-              <Text style={styles.resultValue}>{nfcState.lastResult.id}</Text>
-            </View>
-            
-            <View style={styles.resultItem}>
-              <Text style={styles.resultLabel}>タイプ:</Text>
-              <Text style={styles.resultValue}>{nfcState.lastResult.type}</Text>
-            </View>
-            
-            <View style={styles.resultItem}>
-              <Text style={styles.resultLabel}>読み取り時刻:</Text>
-              <Text style={styles.resultValue}>
-                {new Date(nfcState.lastResult.timestamp).toLocaleString('ja-JP')}
-              </Text>
-            </View>
-
-            {/* 詳細データ表示 */}
-            {nfcState.lastResult.data && (
-              <View style={styles.detailsContainer}>
-                <Text style={styles.detailsTitle}>詳細データ:</Text>
-                <ScrollView 
-                  style={styles.detailsScroll}
-                  showsVerticalScrollIndicator={true}
-                >
-                  <Text style={styles.detailsText}>
-                    {nfcState.lastResult.data}
-                  </Text>
-                </ScrollView>
-              </View>
-            )}
-          </View>
-        )}
-      </ScrollView>
+      </View>
 
       {/* NFCモーダル */}
       <NFCModal
@@ -276,7 +256,8 @@ export default function NFCReaderScreen() {
         }}
         scannedNfcTagId={nfcState.lastResult?.id}
       />
-    </SafeAreaView>
+    </View>
+    </>
   );
 }
 
@@ -284,20 +265,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-  },
-  header: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  backButton: {
-    marginRight: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
   },
   content: {
     flex: 1,
@@ -396,54 +363,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginLeft: 8,
     flex: 1,
-  },
-  resultContainer: {
-    backgroundColor: '#f8f9fa',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
-  },
-  resultTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#333',
-  },
-  resultItem: {
-    flexDirection: 'row',
-    marginBottom: 6,
-  },
-  resultLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
-    minWidth: 80,
-  },
-  resultValue: {
-    fontSize: 14,
-    color: '#333',
-    flex: 1,
-  },
-  detailsContainer: {
-    marginTop: 12,
-  },
-  detailsTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 6,
-    color: '#333',
-  },
-  detailsScroll: {
-    maxHeight: 120,
-    backgroundColor: '#fff',
-    borderRadius: 4,
-    padding: 8,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  detailsText: {
-    fontSize: 12,
-    color: '#333',
-    fontFamily: 'monospace',
   },
 }); 

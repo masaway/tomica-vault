@@ -1,5 +1,4 @@
 import { StyleSheet, View, Text, TouchableOpacity, Alert, ScrollView, Switch, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeColor } from '../../hooks/useThemeColor';
 import { useAuth } from '../../hooks/useAuth';
 import { useAudio } from '../../hooks/useAudio';
@@ -88,7 +87,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor }]}>
+    <View style={[styles.container, { backgroundColor }]}>
       <View style={[styles.header, { borderBottomColor: borderColor }]}>
         <Text style={[styles.title, { color: textColor }]}>設定</Text>
       </View>
@@ -189,7 +188,7 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
