@@ -5,7 +5,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { useTomica, Tomica } from '@/hooks/useTomica';
 import { useAuth } from '@/hooks/useAuth';
-import { determineTomicaSituation, Situation } from '@/utils/tomicaUtils';
+import { determineTomicaSituation } from '@/utils/tomicaUtils';
 
 // 日付を日本語形式でフォーマットする関数
 const formatDate = (dateString: string): string => {
@@ -17,13 +17,13 @@ const BasicInfoSection = ({ tomica }: { tomica: Tomica }) => {
   const situation = determineTomicaSituation(tomica);
   let situationStyle;
   switch (situation) {
-    case '外出中':
+    case 'おでかけ':
       situationStyle = styles.situationOut;
       break;
-    case '家出中':
+    case 'まいご':
       situationStyle = styles.situationMissing;
       break;
-    case '帰宅中':
+    case 'おうち':
     default:
       situationStyle = styles.situationReturning;
       break;
@@ -36,7 +36,6 @@ const BasicInfoSection = ({ tomica }: { tomica: Tomica }) => {
         <Text style={styles.label}>名前</Text>
         <Text style={styles.value}>{tomica.name}</Text>
       </View>
-      {/* 登録IDとNFC IDの表示を削除 */}
       <View style={styles.infoRow}>
         <Text style={styles.label}>状況</Text>
         <Text style={[styles.value, situationStyle]}>{situation}</Text>
@@ -121,7 +120,7 @@ export default function DetailsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { user, loading: authLoading } = useAuth();
-  const { getTomicaById } = useTomica();
+  const { getTomicaById, deleteTomica } = useTomica();
   const [tomica, setTomica] = useState<Tomica | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -137,14 +136,25 @@ export default function DetailsScreen() {
     fetchTomicaDetails();
   }, [params.id, user, authLoading, getTomicaById]);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!tomica) return;
     Alert.alert(
       'おもちゃの削除',
       `${tomica.name}とお別れしますか？`,
       [
         { text: '引き留める', style: 'cancel' },
-        { text: '別れを告げる', style: 'destructive', onPress: () => { router.back(); } },
+        { 
+          text: '別れを告げる', 
+          style: 'destructive', 
+          onPress: async () => {
+            const success = await deleteTomica(tomica.id);
+            if (success) {
+              router.replace('/list');
+            } else {
+              Alert.alert('削除に失敗しました');
+            }
+          }
+        },
       ],
     );
   };

@@ -1,7 +1,6 @@
-import { Tabs } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
-import { Pressable, Text, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
+import { Pressable, Text } from 'react-native';
 import { useThemeColor } from '../../hooks/useThemeColor';
 
 export default function TabLayout() {
