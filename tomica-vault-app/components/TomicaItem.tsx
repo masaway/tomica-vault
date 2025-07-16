@@ -30,6 +30,8 @@ export function TomicaItem({ item, onPress }: TomicaItemProps) {
         return styles.situationOut;
       case 'まいご':
         return styles.situationMissing;
+      case 'おやすみ':
+        return styles.situationSleeping;
       case 'おうち':
       default:
         return styles.situationReturning;
@@ -116,6 +118,10 @@ const styles = StyleSheet.create({
   situationMissing: {
     backgroundColor: '#ffebee',
     color: '#d32f2f',
+  },
+  situationSleeping: {
+    backgroundColor: '#f5f5f5',
+    color: '#757575',
   },
   updateInfo: {
     fontSize: 14,
