@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Tomica } from '@/hooks/useTomica';
+import { determineTomicaSituation } from '@/utils/tomicaUtils';
 
 interface NFCModalProps {
   visible: boolean;
@@ -18,6 +19,7 @@ interface NFCModalProps {
   tomicaList: Tomica[];
   onCheckOut: (tomica: Tomica) => void;
   onCheckIn: (tomica: Tomica) => void;
+  onToggleSleep: (tomica: Tomica) => void;
   scannedNfcTagId?: string;
 }
 
@@ -29,6 +31,7 @@ export default function NFCModal({
   tomicaList,
   onCheckOut,
   onCheckIn,
+  onToggleSleep,
   scannedNfcTagId,
 }: NFCModalProps) {
   const handleViewDetails = (tomica: Tomica) => {
@@ -51,40 +54,80 @@ export default function NFCModal({
   };
 
   const renderTomicaCard = (tomica: Tomica, index: number) => {
-    const checkedOut = isCheckedOut(tomica);
+    const situation = determineTomicaSituation(tomica);
+    
+    // ドキュメント仕様に基づくボタン活性制御
+    const canGoOut = situation === 'まいご' || situation === 'おうち' || situation === 'おやすみ';
+    const canComeHome = situation === 'おでかけ' || situation === 'おやすみ';
     
     return (
       <View key={tomica.id} style={[styles.tomicaCard, index > 0 && styles.additionalCard]}>
         <View style={styles.cardHeader}>
           <Text style={styles.tomicaName}>{tomica.name}</Text>
-          <View style={[styles.statusBadge, checkedOut ? styles.checkedOutBadge : styles.checkedInBadge]}>
-            <Text style={[styles.statusText, checkedOut ? styles.checkedOutText : styles.checkedInText]}>
-              {checkedOut ? '外出中' : ''}
+          <View style={[styles.statusBadge, situation === 'おでかけ' ? styles.checkedOutBadge : styles.checkedInBadge]}>
+            <Text style={[styles.statusText, situation === 'おでかけ' ? styles.checkedOutText : styles.checkedInText]}>
+              {situation}
             </Text>
           </View>
         </View>
         
         <View style={styles.cardActions}>
           <TouchableOpacity
-            style={[styles.actionButton, styles.primaryButton]}
-            onPress={() => checkedOut ? onCheckIn(tomica) : onCheckOut(tomica)}
+            style={[
+              styles.actionButton, 
+              styles.primaryButton,
+              !canComeHome && styles.disabledButton
+            ]}
+            onPress={() => canComeHome ? onCheckIn(tomica) : null}
+            disabled={!canComeHome}
           >
             <Ionicons
-              name={checkedOut ? 'home' : 'exit'}
+              name="home"
               size={20}
-              color="#fff"
+              color={canComeHome ? "#fff" : "#ccc"}
             />
-            <Text style={styles.primaryButtonText}>
-              {checkedOut ? 'おかえり！' : 'いってきます！'}
+            <Text style={[
+              styles.primaryButtonText,
+              !canComeHome && styles.disabledButtonText
+            ]}>
+              ただいま
             </Text>
           </TouchableOpacity>
           
           <TouchableOpacity
-            style={[styles.actionButton, styles.secondaryButton]}
-            onPress={() => handleViewDetails(tomica)}
+            style={[
+              styles.actionButton, 
+              styles.secondaryButton,
+              !canGoOut && styles.disabledSecondaryButton
+            ]}
+            onPress={() => canGoOut ? onCheckOut(tomica) : null}
+            disabled={!canGoOut}
           >
-            <Ionicons name="information-circle" size={20} color="#007AFF" />
-            <Text style={styles.secondaryButtonText}>詳細を見る</Text>
+            <Ionicons 
+              name="exit" 
+              size={20} 
+              color={canGoOut ? "#007AFF" : "#ccc"} 
+            />
+            <Text style={[
+              styles.secondaryButtonText,
+              !canGoOut && styles.disabledButtonText
+            ]}>
+              いってきます
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.actionButton, styles.sleepButton]}
+            onPress={() => onToggleSleep(tomica)}
+          >
+            <Ionicons 
+              name={situation === 'おやすみ' ? 'sunny' : 'moon'} 
+              size={20} 
+              color="#666" 
+            />
+            <Text style={styles.sleepButtonText}>
+              {situation === 'おやすみ' ? 'おこす' : 'おやすみ'}
+            </Text>
           </TouchableOpacity>
         </View>
         
@@ -265,6 +308,28 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#007AFF',
+  },
+  disabledButton: {
+    backgroundColor: '#f5f5f5',
+  },
+  disabledSecondaryButton: {
+    backgroundColor: '#f5f5f5',
+    borderColor: '#ccc',
+  },
+  disabledButtonText: {
+    color: '#ccc',
+  },
+  sleepButton: {
+    backgroundColor: '#f5f5f5',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    flex: 0,
+    width: '100%',
+    marginTop: 8,
+  },
+  sleepButtonText: {
+    color: '#666',
+    fontSize: 14,
   },
   fullWidthButton: {
     flex: 0,

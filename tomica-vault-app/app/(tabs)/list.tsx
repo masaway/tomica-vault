@@ -16,7 +16,7 @@ export default function ListScreen() {
   const { user, loading: authLoading } = useAuth();
   const { tomicaList, loading, error, fetchTomicaList } = useTomica();
   const [refreshing, setRefreshing] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'おうち' | 'おでかけ' | 'まいご'>('all');
+  const [filter, setFilter] = useState<'all' | 'おうち' | 'おでかけ' | 'まいご' | 'おやすみ'>('all');
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const borderColor = useThemeColor({}, 'icon');
@@ -24,7 +24,7 @@ export default function ListScreen() {
 
   // URLパラメータからフィルターを設定
   useEffect(() => {
-    if (urlFilter && (urlFilter === 'all' || urlFilter === 'おうち' || urlFilter === 'おでかけ' || urlFilter === 'まいご')) {
+    if (urlFilter && (urlFilter === 'all' || urlFilter === 'おうち' || urlFilter === 'おでかけ' || urlFilter === 'まいご' || urlFilter === 'おやすみ')) {
       setFilter(urlFilter as typeof filter);
     }
   }, [urlFilter]);
@@ -66,7 +66,7 @@ export default function ListScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor }]}>
       {/* フィルタカード */}
       <View style={styles.filterRow}>
-        {['all', 'おうち', 'おでかけ', 'まいご'].map((key) => (
+        {['all', 'おうち', 'おでかけ', 'まいご', 'おやすみ'].map((key) => (
           <TouchableOpacity
             key={key}
             style={[
