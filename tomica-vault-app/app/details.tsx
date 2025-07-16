@@ -5,37 +5,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { useTomica, Tomica } from '@/hooks/useTomica';
 import { useAuth } from '@/hooks/useAuth';
-import type { Situation } from './list';
-
-// おもちゃの状態を判断する関数
-const determineTomicaSituation = (tomica: Tomica): Situation => {
-  const { check_in_at, checked_out_at } = tomica;
-
-  if (check_in_at === null) {
-    if (checked_out_at) {
-      const checkedOutDate = new Date(checked_out_at).getTime();
-      const now = Date.now();
-      if (now - checkedOutDate >= 48 * 60 * 60 * 1000) {
-        return '家出中';
-      }
-    }
-    return '外出中';
-  }
-  if (checked_out_at === null) return '帰宅中';
-
-  const checkedInDate = new Date(check_in_at).getTime();
-  const checkedOutDate = new Date(checked_out_at).getTime();
-
-  if (checkedInDate > checkedOutDate) {
-    return '帰宅中';
-  } else {
-    const now = Date.now();
-    if (now - checkedOutDate >= 48 * 60 * 60 * 1000) {
-      return '家出中';
-    }
-    return '外出中';
-  }
-};
+import { determineTomicaSituation, Situation } from '@/utils/tomicaUtils';
 
 // 日付を日本語形式でフォーマットする関数
 const formatDate = (dateString: string): string => {

@@ -32,7 +32,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
     <View style={[styles.activityItem, { borderBottomColor: tintColor + '20' }]}>
       <View style={[styles.iconContainer, { backgroundColor: tintColor + '20' }]}>
         <Ionicons 
-          name={item.action === 'チェックイン' ? 'home' : 'car'} 
+          name={item.action === 'チェックイン' ? 'home' : item.action === 'タッチ' ? 'scan' : 'car'} 
           size={16} 
           color={tintColor} 
         />
@@ -56,11 +56,11 @@ export function RecentActivity({ activities }: RecentActivityProps) {
       <View style={[styles.container, { backgroundColor }]}>
         <View style={styles.header}>
           <Ionicons name="time" size={20} color={tintColor} />
-          <Text style={[styles.headerText, { color: textColor }]}>最近のアクティビティ</Text>
+          <Text style={[styles.headerText, { color: textColor }]}>さいきんのタッチ</Text>
         </View>
         <View style={styles.emptyState}>
           <Text style={[styles.emptyText, { color: textColor + '60' }]}>
-            まだアクティビティがありません
+            まだタッチしていないよ
           </Text>
         </View>
       </View>
@@ -71,7 +71,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
     <View style={[styles.container, { backgroundColor }]}>
       <View style={styles.header}>
         <Ionicons name="time" size={20} color={tintColor} />
-        <Text style={[styles.headerText, { color: textColor }]}>最近のアクティビティ</Text>
+        <Text style={[styles.headerText, { color: textColor }]}>さいきんのタッチ</Text>
       </View>
       <FlatList
         data={activities}

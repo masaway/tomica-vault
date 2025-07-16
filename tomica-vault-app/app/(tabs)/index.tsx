@@ -47,8 +47,12 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
 
-  const navigateToList = () => {
-    router.push('/(tabs)/list');
+  const navigateToList = (filter?: string) => {
+    if (filter) {
+      router.push(`/(tabs)/list?filter=${filter}`);
+    } else {
+      router.push('/(tabs)/list?filter=all');
+    }
   };
 
   const unreadCount = stats && lastRead
@@ -94,7 +98,7 @@ export default function HomeScreen() {
         end={{ x: 1, y: 1 }}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={styles.title}>トイパトコレクション</Text>
+          <Text style={styles.title}>おもちゃパトロール</Text>
           <TouchableOpacity
             style={{ marginLeft: 8, position: 'absolute', right: 0 }}
             onPress={handleOpenModal}
@@ -108,7 +112,7 @@ export default function HomeScreen() {
             )}
           </TouchableOpacity>
         </View>
-        <Text style={styles.subtitle}>あなたのおもちゃワールド</Text>
+        <Text style={styles.subtitle}>みんなのおもちゃがいっぱい</Text>
       </LinearGradient>
 
       <ScrollView
@@ -126,31 +130,34 @@ export default function HomeScreen() {
             <View style={styles.statsContainer}>
               <View style={styles.statsRow}>
                 <DashboardCard
-                  title="総コレクション"
+                  title="おもちゃ図鑑"
                   value={stats.total}
                   icon="car-sport"
                   gradientColors={['#FF6B6B', '#FF8E53']}
-                  onPress={navigateToList}
+                  onPress={() => navigateToList()}
                 />
                 <DashboardCard
-                  title="外出中"
+                  title="おでかけ中"
                   value={stats.checkedOut}
                   icon="car"
                   gradientColors={['#4ECDC4', '#44A08D']}
+                  onPress={() => navigateToList('おでかけ')}
                 />
               </View>
               <View style={styles.statsRow}>
                 <DashboardCard
-                  title="帰宅中"
+                  title="おうちにいるよ"
                   value={stats.checkedIn}
                   icon="home"
                   gradientColors={['#9C88FF', '#8976D4']}
+                  onPress={() => navigateToList('おうち')}
                 />
                 <DashboardCard
-                  title="使用率"
-                  value={stats.total > 0 ? `${Math.round((stats.checkedOut / stats.total) * 100)}%` : '0%'}
-                  icon="stats-chart"
-                  gradientColors={['#F093FB', '#F5576C']}
+                  title="まいごさん"
+                  value={stats.missing}
+                  icon="warning"
+                  gradientColors={['#FF6B6B', '#FF5252']}
+                  onPress={() => navigateToList('まいご')}
                 />
               </View>
             </View>

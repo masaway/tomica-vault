@@ -77,6 +77,12 @@ adb pair <IP_ADDRESS>:<PORT>
 
 ### デバイス接続
 ```bash
+# adbサーバーの再起動
+bashadb kill-server
+adb start-server
+```
+
+```bash
 # 1. Android端末でワイヤレスデバッグのIPアドレスを確認
 # 設定 → 開発者オプション → ワイヤレスデバッグ
 
@@ -113,6 +119,8 @@ echo $EXPO_PUBLIC_SUPABASE_ANON_KEY
 ```bash
 # node_modulesが最新であることを確認
 npm install
+# または
+npm ci  # package-lock.jsonを使用した厳密なインストール
 ```
 
 ## 6. 開発サーバーの起動
@@ -121,12 +129,18 @@ npm install
 ```bash
 # 標準モード
 npm start
+# または
+npx expo start
 
 # Expo Go用
 npm run start:expo-go
+# または
+npx expo start --go
 
 # Development Build用
 npm run start:dev-build
+# または
+npx expo start --dev-client
 
 # トンネルモード（ネットワーク問題時）
 npx expo start --dev-client --clear --tunnel
@@ -148,6 +162,8 @@ npx expo run:android --device
 ```bash
 # APKファイルをローカルビルド
 eas build --platform android --profile preview --local
+# または
+npx eas build --platform android --profile preview --local
 
 # カスタムスクリプトで最新ビルドをインストール
 /install-latest-build
@@ -157,6 +173,8 @@ eas build --platform android --profile preview --local
 ```bash
 # 開発サーバー起動後、Expo GoアプリでQRコードスキャン
 npm start
+# または
+npx expo start
 ```
 
 ## 8. 便利なコマンド
@@ -222,6 +240,8 @@ npx expo start --tunnel
 
 # キャッシュクリア
 npx expo r -c
+# または
+npx expo start --clear
 ```
 
 ### ワイヤレス接続が不安定な場合
@@ -239,6 +259,8 @@ adb devices
 # 2. 開発サーバー起動
 cd /home/yoshiaki/work/tomica-vault/tomica-vault-app
 npm run start:dev-build
+# または
+npx expo start --dev-client
 
 # 3. コード変更後の再読み込み
 # Android端末でExpoアプリを振る（shake）またはr+Enterキー
@@ -251,6 +273,8 @@ adb logcat -v time | grep -E "tomicavaultapp|ERROR|FATAL"
 ```bash
 # 1. APKビルド
 eas build --platform android --profile preview --local
+# または
+npx eas build --platform android --profile preview --local
 
 # 2. 最新ビルドをインストール
 /install-latest-build

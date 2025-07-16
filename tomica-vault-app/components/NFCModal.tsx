@@ -21,7 +21,7 @@ interface NFCModalProps {
   scannedNfcTagId?: string;
 }
 
-const { height: screenHeight } = Dimensions.get('window');
+const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
 export default function NFCModal({
   visible,
@@ -59,7 +59,7 @@ export default function NFCModal({
           <Text style={styles.tomicaName}>{tomica.name}</Text>
           <View style={[styles.statusBadge, checkedOut ? styles.checkedOutBadge : styles.checkedInBadge]}>
             <Text style={[styles.statusText, checkedOut ? styles.checkedOutText : styles.checkedInText]}>
-              {checkedOut ? '外出中' : '帰宅中'}
+              {checkedOut ? '外出中' : ''}
             </Text>
           </View>
         </View>
@@ -75,7 +75,7 @@ export default function NFCModal({
               color="#fff"
             />
             <Text style={styles.primaryButtonText}>
-              {checkedOut ? '帰宅登録' : '持ち出し登録'}
+              {checkedOut ? 'おかえり！' : 'いってきます！'}
             </Text>
           </TouchableOpacity>
           
@@ -110,7 +110,7 @@ export default function NFCModal({
           <View style={styles.modalHeader}>
             <View style={styles.headerLeft}>
               <Ionicons name="radio" size={24} color="#4A90E2" />
-              <Text style={styles.modalTitle}>NFC読み取り結果</Text>
+              <Text style={styles.modalTitle}>おもちゃタッチけっか</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <Ionicons name="close" size={24} color="#666" />
@@ -162,16 +162,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 40,
+    paddingHorizontal: 16,
+    paddingVertical: 30,
   },
   modalContainer: {
     backgroundColor: '#fff',
     borderRadius: 20,
-    maxHeight: screenHeight * 0.85,
-    minHeight: 350,
+    maxHeight: screenHeight * 0.9,
+    minHeight: 400,
     width: '100%',
-    maxWidth: 400,
+    maxWidth: screenWidth > 600 ? 600 : 500,
   },
   modalHeader: {
     flexDirection: 'row',

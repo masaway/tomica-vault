@@ -6,8 +6,7 @@ import { TomicaItem } from '../../components/TomicaItem';
 import { useEffect, useState } from 'react';
 import { useTomica, Tomica } from '@/hooks/useTomica';
 import { useThemeColor } from '../../hooks/useThemeColor';
-import type { Situation } from './list';
-import { situationOrder } from './list';
+import { determineTomicaSituation, situationOrder, Situation } from '@/utils/tomicaUtils';
 
 export default function SearchScreen() {
   const { tomicaList, loading, error, searchTomica, fetchTomicaList } = useTomica();
@@ -31,31 +30,6 @@ export default function SearchScreen() {
     // 空欄のときは何もしない
   }, [debouncedQuery]);
 
-  const determineTomicaSituation = (tomica: Tomica): Situation => {
-    const { check_in_at, checked_out_at } = tomica;
-    if (check_in_at === null) {
-      if (checked_out_at) {
-        const checkedOutDate = new Date(checked_out_at).getTime();
-        const now = Date.now();
-        if (now - checkedOutDate >= 48 * 60 * 60 * 1000) {
-          return '家出中';
-        }
-      }
-      return '外出中';
-    }
-    if (checked_out_at === null) return '帰宅中';
-    const checkedInDate = new Date(check_in_at).getTime();
-    const checkedOutDate = new Date(checked_out_at).getTime();
-    if (checkedInDate > checkedOutDate) {
-      return '帰宅中';
-    } else {
-      const now = Date.now();
-      if (now - checkedOutDate >= 48 * 60 * 60 * 1000) {
-        return '家出中';
-      }
-      return '外出中';
-    }
-  };
 
   const renderItem = ({ item }: { item: Tomica }) => (
     <TomicaItem

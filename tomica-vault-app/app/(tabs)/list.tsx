@@ -7,56 +7,27 @@ import { useAuth } from '@/hooks/useAuth';
 import { TomicaItem } from '../../components/TomicaItem';
 import { useThemeColor } from '../../hooks/useThemeColor';
 import { useFocusEffect } from '@react-navigation/native';
+import { determineTomicaSituation, situationOrder, Situation } from '@/utils/tomicaUtils';
+import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 
-// 状態の型を共通化
-export type Situation = '家出中' | '外出中' | '帰宅中';
-
-// トミカの状態を判断する関数
-const determineTomicaSituation = (tomica: Tomica): Situation => {
-  const { check_in_at, checked_out_at } = tomica;
-
-  if (check_in_at === null) {
-    if (checked_out_at) {
-      const checkedOutDate = new Date(checked_out_at).getTime();
-      const now = Date.now();
-      if (now - checkedOutDate >= 48 * 60 * 60 * 1000) {
-        return '家出中';
-      }
-    }
-    return '外出中';
-  }
-  if (checked_out_at === null) return '帰宅中';
-
-  const checkedInDate = new Date(check_in_at).getTime();
-  const checkedOutDate = new Date(checked_out_at).getTime();
-
-  if (checkedInDate > checkedOutDate) {
-    return '帰宅中';
-  } else {
-    const now = Date.now();
-    if (now - checkedOutDate >= 48 * 60 * 60 * 1000) {
-      return '家出中';
-    }
-    return '外出中';
-  }
-};
-
-// 状態の表示順を定義
-export const situationOrder: Record<Situation, number> = {
-  '家出中': 0,
-  '外出中': 1,
-  '帰宅中': 2,
-};
 
 export default function ListScreen() {
   const { user, loading: authLoading } = useAuth();
   const { tomicaList, loading, error, fetchTomicaList } = useTomica();
   const [refreshing, setRefreshing] = useState(false);
-  const [filter, setFilter] = useState<'all' | '帰宅中' | '外出中'>('all');
+  const [filter, setFilter] = useState<'all' | 'おうち' | 'おでかけ' | 'まいご'>('all');
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const borderColor = useThemeColor({}, 'icon');
+  const { filter: urlFilter } = useLocalSearchParams<{ filter?: string }>();
+
+  // URLパラメータからフィルターを設定
+  useEffect(() => {
+    if (urlFilter && (urlFilter === 'all' || urlFilter === 'おうち' || urlFilter === 'おでかけ' || urlFilter === 'まいご')) {
+      setFilter(urlFilter as typeof filter);
+    }
+  }, [urlFilter]);
 
   // 画面フォーカス時に最新リスト取得
   useFocusEffect(
@@ -88,11 +59,6 @@ export default function ListScreen() {
   // フィルタ適用
   const filteredList = tomicaList.filter(item => {
     if (filter === 'all') return true;
-    if (filter === '外出中') {
-      // 外出中と家出中の両方を含める
-      const situation = determineTomicaSituation(item);
-      return situation === '外出中' || situation === '家出中';
-    }
     return determineTomicaSituation(item) === filter;
   });
 
@@ -100,7 +66,7 @@ export default function ListScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor }]}>
       {/* フィルタカード */}
       <View style={styles.filterRow}>
-        {['all', '帰宅中', '外出中'].map((key) => (
+        {['all', 'おうち', 'おでかけ', 'まいご'].map((key) => (
           <TouchableOpacity
             key={key}
             style={[
@@ -113,7 +79,7 @@ export default function ListScreen() {
               styles.filterCardText,
               filter === key && styles.filterCardTextActive
             ]}>
-              {key === 'all' ? 'すべて' : key}
+              {key === 'all' ? 'ぜんぶ' : key}
             </Text>
           </TouchableOpacity>
         ))}

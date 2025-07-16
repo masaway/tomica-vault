@@ -2,9 +2,7 @@ import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import { useEffect, useState, useCallback } from 'react';
-import ReactLogo from '../assets/images/react-logo.png';
 import { useNFC } from '@/hooks/useNFC';
 import { useNFCEnvironment } from '@/hooks/useNFCEnvironment';
 import { useTomica, Tomica } from '@/hooks/useTomica';
@@ -152,7 +150,7 @@ export default function NFCReaderScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#007AFF" />
         </TouchableOpacity>
-        <Text style={styles.title}>NFC読み取り</Text>
+        <Text style={styles.title}>おもちゃタッチ</Text>
       </View>
       
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -176,25 +174,25 @@ export default function NFCReaderScreen() {
         {/* NFC読み取りエリア */}
         <View style={styles.nfcArea}>
           <View style={styles.nfcIconContainer}>
-            <Image
-              source={ReactLogo}
-              style={{ width: 80, height: 80 }}
-              contentFit="contain"
+            <Ionicons 
+              name="scan" 
+              size={100} 
+              color={nfcState.isAutoScanning ? "#4A90E2" : "#999"} 
             />
             {nfcState.isAutoScanning && (
               <View style={styles.scanningOverlay}>
-                <Text style={styles.scanningText}>読み取り待機中...</Text>
+                <Text style={styles.scanningText}>タッチまちだよ...</Text>
               </View>
             )}
           </View>
           
           <Text style={styles.instruction}>
-            NFCタグをスマートフォンの背面に近づけてください
+            おもちゃをスマホにタッチしてね
           </Text>
           
           <Text style={styles.subInstruction}>
             {nfcState.isAutoScanning 
-              ? 'タグを近づけると自動的に読み取ります' 
+              ? '' 
               : nfcState.isSupported
               ? 'NFC機能が利用可能です'
               : nfcState.error 
@@ -206,7 +204,7 @@ export default function NFCReaderScreen() {
           {nfcState.isAutoScanning && (
             <View style={styles.autoScanStatus}>
               <Ionicons name="radio" size={24} color="#4A90E2" />
-              <Text style={styles.autoScanText}>自動スキャン中</Text>
+              <Text style={styles.autoScanText}>じどうタッチ中</Text>
             </View>
           )}
 
@@ -222,7 +220,7 @@ export default function NFCReaderScreen() {
         {/* 読み取り結果表示 - 画面中央に配置 */}
         {nfcState.lastResult && (
           <View style={styles.resultContainer}>
-            <Text style={styles.resultTitle}>読み取り結果</Text>
+            <Text style={styles.resultTitle}>タッチけっか</Text>
             
             <View style={styles.resultItem}>
               <Text style={styles.resultLabel}>タグID:</Text>

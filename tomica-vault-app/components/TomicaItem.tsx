@@ -1,7 +1,7 @@
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { useThemeColor } from '../hooks/useThemeColor';
-import type { Situation } from '../app/(tabs)/list';
+import type { Situation } from '../utils/tomicaUtils';
 
 type Tomica = {
   id: number;
@@ -26,11 +26,11 @@ export function TomicaItem({ item, onPress }: TomicaItemProps) {
 
   const getSituationStyle = (situation: Situation) => {
     switch (situation) {
-      case '外出中':
+      case 'おでかけ':
         return styles.situationOut;
-      case '家出中':
+      case 'まいご':
         return styles.situationMissing;
-      case '帰宅中':
+      case 'おうち':
       default:
         return styles.situationReturning;
     }
