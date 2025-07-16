@@ -89,7 +89,7 @@ export default function NFCModal({
     const canComeHome = situation === 'おでかけ' || situation === 'おやすみ';
     
     return (
-      <View key={tomica.id} style={[styles.tomicaCard, index > 0 && styles.additionalCard]}>
+      <View key={tomica.id} style={styles.tomicaCard}>
         <View style={styles.cardHeader}>
           <TouchableOpacity 
             style={styles.tomicaNameContainer}
@@ -220,8 +220,8 @@ export default function NFCModal({
               </TouchableOpacity>
             </View>
           ) : (
-            <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
-              {tomicaList.length > 1 && (
+            <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={true}>
+              {tomicaList.length >= 1 && (
                 <View style={styles.multipleNotice}>
                   <Ionicons name="layers" size={16} color="#FF9500" />
                   <Text style={styles.multipleText}>
@@ -245,13 +245,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 30,
+    paddingVertical: 100,
   },
   modalContainer: {
     backgroundColor: '#fff',
     borderRadius: 20,
     maxHeight: screenHeight * 0.9,
-    minHeight: 450,
+    minHeight: screenHeight * 0.7,
     width: '100%',
     maxWidth: screenWidth > 600 ? 700 : 600,
   },
@@ -287,10 +287,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: '#e9ecef',
-  },
-  additionalCard: {
-    backgroundColor: '#fff3cd',
-    borderColor: '#ffeaa7',
   },
   cardHeader: {
     flexDirection: 'row',
