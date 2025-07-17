@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ScrollView,
   Dimensions,
+  StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -23,7 +24,8 @@ interface NFCModalProps {
   scannedNfcTagId?: string;
 }
 
-const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
+const { height: screenHeight, width: screenWidth } = Dimensions.get('screen');
+const statusBarHeight = StatusBar.currentHeight || 0;
 
 export default function NFCModal({
   visible,
@@ -186,6 +188,7 @@ export default function NFCModal({
       animationType="slide"
       transparent={true}
       onRequestClose={onClose}
+      statusBarTranslucent={true}
     >
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
@@ -240,12 +243,16 @@ export default function NFCModal({
 
 const styles = StyleSheet.create({
   modalOverlay: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 100,
+    paddingTop: statusBarHeight,
   },
   modalContainer: {
     backgroundColor: '#fff',

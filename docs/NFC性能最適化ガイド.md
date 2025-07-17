@@ -35,36 +35,53 @@ NFCの使用説明と特定タグタイプの指定：
 <key>NFCReaderUsageDescription</key>
 <string>トミカの管理にNFCを使用します</string>
 
-<!-- ISO7816タグ用 -->
+<!-- 幅広いISO7816タグ用 -->
 <key>com.apple.developer.nfc.readersession.iso7816.select-identifiers</key>
 <array>
   <string>D2760000850100</string>
   <string>D2760000850101</string>
+  <string>A0000000031010</string> <!-- VISA -->
+  <string>A0000000041010</string> <!-- Mastercard -->
+  <string>A0000000032010</string> <!-- VISA Electron -->
+  <string>315449432E534159</string> <!-- HID -->
 </array>
 
-<!-- Felicaタグ用 -->
+<!-- Felicaタグ用（幅広い対応） -->
 <key>com.apple.developer.nfc.readersession.felica.systemcodes</key>
 <array>
-  <string>8005</string>
-  <string>8008</string>
-  <string>0003</string>
-  <string>fe00</string>
+  <string>0003</string> <!-- 共通領域 -->
+  <string>8005</string> <!-- Mobile FeliCa -->
+  <string>8008</string> <!-- 楽天Edy -->
+  <string>90b7</string> <!-- nanaco -->
+  <string>927a</string> <!-- WAON -->
+  <string>12FC</string> <!-- Suica/PASMO -->
+  <string>86a7</string> <!-- iD -->
+  <string>fe00</string> <!-- 共通フォーマット -->
 </array>
 ```
 
 ### 3. React Native NFC Manager最適化
 
-#### 基本的なNFCスキャン実装
+#### 幅広いNFCタグ対応のスキャン実装
 ```javascript
 import NfcManager, {NfcTech} from 'react-native-nfc-manager';
 
 // NFC初期化（アプリ起動時に1回）
 await NfcManager.start();
 
-async function optimizedNfcScan() {
+async function universalNfcScan() {
   try {
-    // 特定のテクノロジーのみをリクエスト（高速化）
-    await NfcManager.requestTechnology(NfcTech.Ndef);
+    // 複数のテクノロジーを同時にリクエスト（幅広い対応）
+    await NfcManager.requestTechnology([
+      NfcTech.Ndef,        // NDEF形式タグ
+      NfcTech.NfcA,        // ISO14443 Type A
+      NfcTech.NfcB,        // ISO14443 Type B
+      NfcTech.NfcF,        // JIS X 6319-4 (Felica)
+      NfcTech.NfcV,        // ISO15693
+      NfcTech.IsoDep,      // ISO14443-4
+      NfcTech.MifareClassic, // MIFARE Classic
+      NfcTech.MifareUltralight // MIFARE Ultralight
+    ]);
     
     // タグ情報取得
     const tag = await NfcManager.getTag();
@@ -123,7 +140,7 @@ runOnUI(handleNfcOnUIThread)(contextId);
 
 ### 6. アプリケーションレベル最適化
 
-#### useNFC.tsフックの改善例
+#### useNFC.tsフックの改善例（幅広いタグ対応）
 ```typescript
 import { useCallback, useState } from 'react';
 import NfcManager, { NfcTech } from 'react-native-nfc-manager';
@@ -131,19 +148,28 @@ import NfcManager, { NfcTech } from 'react-native-nfc-manager';
 export const useNFC = () => {
   const [isScanning, setIsScanning] = useState(false);
   
-  const optimizedScan = useCallback(async () => {
+  const universalScan = useCallback(async () => {
     if (isScanning) return; // 重複スキャン防止
     
     setIsScanning(true);
     try {
-      // 1. 特定テクノロジーのみリクエスト
-      await NfcManager.requestTechnology([NfcTech.Ndef]);
+      // 1. 幅広いテクノロジーに対応
+      await NfcManager.requestTechnology([
+        NfcTech.Ndef,
+        NfcTech.NfcA,
+        NfcTech.NfcB,
+        NfcTech.NfcF,
+        NfcTech.NfcV,
+        NfcTech.IsoDep,
+        NfcTech.MifareClassic,
+        NfcTech.MifareUltralight
+      ]);
       
-      // 2. 短時間でタグ取得
+      // 2. 最適化されたタイムアウト設定
       const tag = await Promise.race([
         NfcManager.getTag(),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout')), 5000)
+          setTimeout(() => reject(new Error('Timeout')), 3000) // 短縮
         )
       ]);
       
@@ -154,7 +180,7 @@ export const useNFC = () => {
     }
   }, [isScanning]);
   
-  return { optimizedScan, isScanning };
+  return { universalScan, isScanning };
 };
 ```
 
@@ -167,14 +193,16 @@ export const useNFC = () => {
 
 ### iOS設定
 - [ ] NFCReaderUsageDescription追加
-- [ ] 必要なISO7816 AIDs設定
-- [ ] Felicaシステムコード設定（必要に応じて）
+- [ ] 幅広いISO7816 AIDs設定
+- [ ] Felicaシステムコード設定
+- [ ] 様々なNFCフォーマット対応
 
 ### コード最適化
-- [ ] 特定NFCテクノロジーのみリクエスト
-- [ ] タイムアウト処理実装
+- [ ] 複数NFCテクノロジーの同時対応
+- [ ] 短縮されたタイムアウト処理実装
 - [ ] 適切なリソース解放
 - [ ] UI/UXフィードバック改善
+- [ ] タグタイプ自動判別機能
 
 ### パフォーマンス測定
 - [ ] スキャン速度測定
@@ -200,10 +228,29 @@ export const useNFC = () => {
 
 ## 📊 期待される改善効果
 
-1. **スキャン速度**：50-70%向上
-2. **感度**：より遠距離でのタグ検出
-3. **安定性**：スキャン失敗率の低減
-4. **ユーザー体験**：よりスムーズな操作感
+1. **スキャン速度**：30-50%向上（幅広い対応のため若干低下）
+2. **タグ対応性**：多様なNFCタグとの互換性
+3. **感度**：より遠距離でのタグ検出
+4. **安定性**：スキャン失敗率の低減
+5. **ユーザー体験**：よりスムーズな操作感
+
+## 🏷️ 対応可能なNFCタグタイプ
+
+### 一般的なNFCタグ
+- **NTAG213/215/216**: 最も一般的なNFCタグ
+- **MIFARE Classic**: 交通カード等で使用
+- **MIFARE Ultralight**: 小容量・低コスト
+- **TOPAZ**: 古い規格のタグ
+
+### 日本固有のタグ
+- **FeliCa**: 交通系ICカード（Suica、PASMO等）
+- **おサイフケータイ**: モバイル決済
+- **nanaco/WAON**: 電子マネー
+
+### 産業用・特殊タグ
+- **ISO15693**: 長距離読み取り対応
+- **ISO14443 Type A/B**: 非接触ICカード
+- **HID Proximity**: アクセス制御カード
 
 ## 🔗 参考資料
 

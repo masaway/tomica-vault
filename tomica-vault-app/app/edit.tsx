@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTomica } from '../hooks/useTomica';
+import { useNFC } from '../hooks/useNFC';
 import { Database } from '../types/supabase';
 
 export default function EditScreen() {
@@ -16,8 +17,10 @@ export default function EditScreen() {
   );
   const [notes, setNotes] = useState(tomica.memo || '');
   const [isSleeping, setIsSleeping] = useState(tomica.is_sleeping === true);
-  const { updateTomica, toggleSleepMode } = useTomica();
+  const { updateTomica, toggleSleepMode, updateTomicaNfcTag } = useTomica();
+  const { readNfcTag, nfcState } = useNFC();
   const [isLoading, setIsLoading] = useState(false);
+  const [isNfcReregistering, setIsNfcReregistering] = useState(false);
 
   // 編集後に最新詳細画面へ遷移するナビゲーション処理を関数化
   const navigateToLatestDetails = (router: ReturnType<typeof useRouter>, tomicaId: number) => {
@@ -60,6 +63,69 @@ export default function EditScreen() {
       Alert.alert('エラー', '保存に失敗しました');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleNfcReregister = async () => {
+    if (!nfcState.isSupported) {
+      Alert.alert('エラー', 'この端末ではNFC機能がサポートされていません');
+      return;
+    }
+
+    try {
+      setIsNfcReregistering(true);
+      
+      Alert.alert(
+        'NFCタグの再登録',
+        '新しいNFCタグをスマートフォンの背面にかざしてください',
+        [
+          {
+            text: 'キャンセル',
+            style: 'cancel',
+            onPress: () => setIsNfcReregistering(false)
+          },
+          {
+            text: 'スキャン開始',
+            onPress: async () => {
+              const result = await readNfcTag();
+              if (result) {
+                Alert.alert(
+                  '確認',
+                  `新しいNFCタグ（ID: ${result.id}）を登録しますか？`,
+                  [
+                    {
+                      text: 'キャンセル',
+                      style: 'cancel'
+                    },
+                    {
+                      text: '登録する',
+                      onPress: async () => {
+                        const updateResult = await updateTomicaNfcTag(tomica.id, result.id);
+                        if (updateResult) {
+                          Alert.alert('成功', 'NFCタグが再登録されました', [
+                            {
+                              text: 'OK',
+                              onPress: () => navigateToLatestDetails(router, tomica.id)
+                            }
+                          ]);
+                        } else {
+                          Alert.alert('エラー', 'NFCタグの登録に失敗しました');
+                        }
+                      }
+                    }
+                  ]
+                );
+              } else {
+                Alert.alert('エラー', 'NFCタグの読み取りに失敗しました');
+              }
+              setIsNfcReregistering(false);
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      Alert.alert('エラー', 'NFCタグの読み取り中にエラーが発生しました');
+      setIsNfcReregistering(false);
     }
   };
 
@@ -158,6 +224,24 @@ export default function EditScreen() {
                 {isSleeping ? 'おやすみ中' : '通常モード'}
               </Text>
             </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>NFCタグ</Text>
+          <View style={styles.nfcSection}>
+            <Text style={styles.nfcInfo}>
+              現在のNFCタグID: {tomica.nfc_tag_uid || '未登録'}
+            </Text>
+            <TouchableOpacity 
+              style={[styles.nfcReregisterButton, isNfcReregistering && styles.nfcReregisterButtonDisabled]} 
+              onPress={handleNfcReregister}
+              disabled={isLoading || isNfcReregistering}
+            >
+              <Text style={styles.nfcReregisterButtonText}>
+                {isNfcReregistering ? 'NFCタグ読み取り中...' : 'NFCタグを再登録'}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
@@ -312,6 +396,33 @@ const styles = StyleSheet.create({
     backgroundColor: '#007AFF',
   },
   bottomButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  nfcSection: {
+    backgroundColor: '#f8f9fa',
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  nfcInfo: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 12,
+  },
+  nfcReregisterButton: {
+    backgroundColor: '#28a745',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  nfcReregisterButtonDisabled: {
+    backgroundColor: '#6c757d',
+  },
+  nfcReregisterButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',

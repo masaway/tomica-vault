@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Alert, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -146,7 +146,7 @@ export default function NFCReaderScreen() {
 
   // カスタムヘッダー
   const CustomHeader = () => (
-    <SafeAreaView edges={['top']} style={{ backgroundColor: '#000' }}>
+    <SafeAreaView edges={[]} style={{ backgroundColor: '#000' }}>
       <View
         style={{
           flexDirection: 'row',
@@ -168,8 +168,14 @@ export default function NFCReaderScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ header: () => <CustomHeader /> }} />
+      <Stack.Screen options={{ headerShown: false }} />
+      <StatusBar 
+        barStyle="light-content" 
+        backgroundColor="#000" 
+        translucent={modalVisible}
+      />
       <View style={styles.container}>
+        <CustomHeader />
       
       <View style={styles.content}>
         {/* 環境情報表示 */}

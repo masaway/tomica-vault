@@ -639,6 +639,79 @@ export function useTomica() {
     [user]
   );
 
+  // NFCタグのUIDを更新
+  const updateTomicaNfcTag = useCallback(
+    async (id: number, newNfcTagUid: string) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const userId = checkAuth(); // 認証チェック
+
+        // 所有権チェック
+        const { data: ownershipData, error: ownershipError } = await supabase
+          .from('user_tomica_ownership')
+          .select('tomica_id')
+          .eq('user_id', userId)
+          .eq('tomica_id', id)
+          .single();
+        
+        if (ownershipError || !ownershipData) {
+          throw new Error('このおもちゃを更新する権限がありません');
+        }
+
+        // 新しいNFCタグが既に使用されていないかチェック
+        const { data: existingTomica, error: checkError } = await supabase
+          .from('owned_tomica')
+          .select('id, name')
+          .eq('nfc_tag_uid', newNfcTagUid)
+          .is('deleted_at', null)
+          .single();
+
+        if (checkError && checkError.code !== 'PGRST116') {
+          throw checkError;
+        }
+
+        if (existingTomica && existingTomica.id !== id) {
+          throw new Error(`このNFCタグは既に「${existingTomica.name}」で使用されています`);
+        }
+
+        // JSTで保存
+        const now = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().replace('Z', '+09:00');
+
+        const { error: updateError } = await supabase
+          .from('owned_tomica')
+          .update({
+            nfc_tag_uid: newNfcTagUid,
+            updated_at: now,
+          })
+          .eq('id', id);
+        
+        if (updateError) throw updateError;
+
+        // 最新データ取得
+        const { data, error: fetchError } = await supabase
+          .from('owned_tomica')
+          .select('*')
+          .eq('id', id)
+          .single();
+        
+        if (fetchError) throw fetchError;
+
+        setTomicaList((prev) =>
+          prev.map((t) => (t.id === id ? { ...t, ...data } : t))
+        );
+        
+        return data;
+      } catch (err) {
+        handleError(err);
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [user]
+  );
+
   return {
     tomicaList,
     loading,
@@ -653,6 +726,7 @@ export function useTomica() {
     calculateStats,
     addTomica,
     updateTomica,
+    updateTomicaNfcTag,
     toggleSleepMode,
     deleteTomica,
   };
