@@ -1,10 +1,10 @@
-# Tomica Vault - Landing Page
+# おもちゃパトロール - Landing Page
 
-このディレクトリには、Tomica Vault アプリのランディングページが含まれています。
+このディレクトリには、おもちゃパトロール アプリのランディングページが含まれています。
 
-## 📱 Tomica Vault について
+## 📱 おもちゃパトロール について
 
-Tomica Vault は、NFCタグを使用してトミカの管理を行う React Native アプリケーションです。子どもが楽しく片付けを行えるよう、音声フィードバック機能を備えています。
+おもちゃパトロール は、NFCタグを使用しておもちゃの管理を行う React Native アプリケーションです。子どもが楽しく片付けを行えるよう、音声フィードバック機能を備えています。
 
 ## 🌐 ランディングページの特徴
 
@@ -16,7 +16,7 @@ Tomica Vault は、NFCタグを使用してトミカの管理を行う React Nat
 ## 📁 ファイル構成
 
 ```
-landing-page/
+docs/
 ├── index.html          # メインのHTMLファイル
 ├── css/
 │   └── style.css       # スタイルシート
@@ -84,15 +84,15 @@ https://masaway.github.io/tomica-vault/
 1. GitHubリポジトリの Settings → Pages
 2. Source: Deploy from a branch
 3. Branch: main
-4. Folder: /landing-page
+4. Folder: /docs
 5. Save
 
 ## 🎯 SEO対策
 
 ### メタタグ
-- **タイトル**: Tomica Vault - NFCでトミカ管理を楽しく
-- **説明**: NFCタグを使ってトミカの管理を楽しく！
-- **キーワード**: トミカ, NFC, 管理, アプリ, 子ども, 片付け
+- **タイトル**: おもちゃパトロール - おもちゃをNFCタグで簡単管理
+- **説明**: NFCタグを使っておもちゃの管理を楽しく！
+- **キーワード**: おもちゃ, NFC, 管理, アプリ, 子ども, 片付け, パトロール
 
 ### 構造化データ
 - セマンティックHTML5要素の使用
@@ -116,7 +116,7 @@ https://masaway.github.io/tomica-vault/
 ### コンテンツ追加
 - [ ] 開発者ブログ
 - [ ] 使用方法の詳細ガイド
-- [ ] トミカコレクション紹介
+- [ ] おもちゃコレクション紹介
 - [ ] コミュニティ機能
 
 ## 📞 お問い合わせ
@@ -131,4 +131,4 @@ https://masaway.github.io/tomica-vault/
 
 ---
 
-*このランディングページは Tomica Vault アプリケーションの一部として開発されています。*
+*このランディングページは おもちゃパトロール アプリケーションの一部として開発されています。*
