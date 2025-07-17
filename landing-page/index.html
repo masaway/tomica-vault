@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tomica Vault - NFCでトミカ管理を楽しく</title>
+    <meta name="description" content="NFCタグを使ってトミカの管理を楽しく！子どもが片付けを楽しめる音声付きトミカ管理アプリです。">
+    <meta name="keywords" content="トミカ, NFC, 管理, アプリ, 子ども, 片付け">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <div class="nav-container">
+                <div class="logo">
+                    <h1>🚗 Tomica Vault</h1>
+                </div>
+                <ul class="nav-menu">
+                    <li><a href="#features">機能</a></li>
+                    <li><a href="#how-to-use">使い方</a></li>
+                    <li><a href="#tech">技術情報</a></li>
+                    <li><a href="#download" class="cta-btn">ダウンロード</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <!-- ヒーローセクション -->
+        <section class="hero">
+            <div class="hero-container">
+                <div class="hero-content">
+                    <h2 class="hero-title">NFCでトミカ管理を<br>もっと楽しく</h2>
+                    <p class="hero-subtitle">
+                        子どもが片付けを楽しめる、音声付きトミカ管理アプリ。<br>
+                        NFCタグで簡単に持ち出し・帰宅管理ができます。
+                    </p>
+                    <div class="hero-actions">
+                        <a href="#download" class="btn btn-primary">アプリをダウンロード</a>
+                        <a href="#features" class="btn btn-secondary">機能を見る</a>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <div class="phone-mockup">
+                        <div class="phone-screen">
+                            <div class="app-preview">
+                                <div class="dashboard-cards">
+                                    <div class="card">
+                                        <div class="card-icon">🏠</div>
+                                        <div class="card-text">
+                                            <h3>帰宅中</h3>
+                                            <p>12台</p>
+                                        </div>
+                                    </div>
+                                    <div class="card">
+                                        <div class="card-icon">🚗</div>
+                                        <div class="card-text">
+                                            <h3>外出中</h3>
+                                            <p>3台</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 機能紹介セクション -->
+        <section id="features" class="features">
+            <div class="container">
+                <h2 class="section-title">主な機能</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">📱</div>
+                        <h3>NFCタグ読み取り</h3>
+                        <p>トミカにNFCタグを貼り付けて、スマホでタッチするだけで情報を読み取り。簡単に持ち出し・帰宅管理ができます。</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔊</div>
+                        <h3>音声フィードバック</h3>
+                        <p>NFCタグを読み取ると「ピッ！」という音が鳴り、子どもが楽しく片付けられます。PayPayのような親しみやすい音声です。</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3>管理ダッシュボード</h3>
+                        <p>トミカの状態を一目で確認。帰宅中・外出中・行方不明（48時間以上）の状態を色分けで表示します。</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔍</div>
+                        <h3>検索・一覧機能</h3>
+                        <p>登録したトミカを名前で検索したり、一覧で確認可能。購入日やメモも記録できます。</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⚠️</div>
+                        <h3>行方不明検知</h3>
+                        <p>48時間以上帰宅していないトミカを自動で「家出中」として検知。大切なトミカを見つけやすくします。</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📝</div>
+                        <h3>簡単登録・編集</h3>
+                        <p>新しいトミカの登録や既存の情報編集が簡単。子どもでも操作しやすいシンプルなインターフェース。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 使い方セクション -->
+        <section id="how-to-use" class="how-to-use">
+            <div class="container">
+                <h2 class="section-title">使い方</h2>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>NFCタグを貼り付け</h3>
+                            <p>トミカにNFCタグを貼り付けます。小さなシール状のタグなので、トミカの裏側に貼るだけでOK。</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>アプリで新規登録</h3>
+                            <p>アプリを開いて「新規登録」をタップ。トミカの名前や購入日を入力してNFCタグを読み取ります。</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>お出かけ時にタッチ</h3>
+                            <p>外出する時は持ち出すトミカをスマホでタッチ。「ピッ！」という音と共に外出状態に変わります。</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h3>帰宅時にもタッチ</h3>
+                            <p>帰宅したら再度タッチして帰宅状態に。忘れものがないか一覧で確認できます。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 技術情報セクション -->
+        <section id="tech" class="tech">
+            <div class="container">
+                <h2 class="section-title">技術情報</h2>
+                <div class="tech-grid">
+                    <div class="tech-card">
+                        <h3>📱 React Native</h3>
+                        <p>iOS・Android両対応のクロスプラットフォームアプリ。Expo Router を使用した高速開発。</p>
+                    </div>
+                    <div class="tech-card">
+                        <h3>🏷️ NFC対応</h3>
+                        <p>NTAG213 NFCタグに対応。react-native-nfc-manager による安定した読み取り性能。</p>
+                    </div>
+                    <div class="tech-card">
+                        <h3>🗄️ Supabase</h3>
+                        <p>PostgreSQLベースの高性能データベース。リアルタイムデータ同期とセキュアな認証。</p>
+                    </div>
+                    <div class="tech-card">
+                        <h3>🎨 モダンUI</h3>
+                        <p>Linear Gradient と Expo Vector Icons を使用した美しいインターフェース。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 今後の展望セクション -->
+        <section class="future">
+            <div class="container">
+                <h2 class="section-title">今後の展望</h2>
+                <div class="future-grid">
+                    <div class="future-item">
+                        <div class="future-icon">👥</div>
+                        <h3>家族共有機能</h3>
+                        <p>Google認証による家族アカウント連携で、複数の子どもでトミカを共有管理。</p>
+                    </div>
+                    <div class="future-item">
+                        <div class="future-icon">📷</div>
+                        <h3>バーコード対応</h3>
+                        <p>購入時のバーコードからトミカ情報を自動取得して、登録作業をより簡単に。</p>
+                    </div>
+                    <div class="future-item">
+                        <div class="future-icon">🎯</div>
+                        <h3>ARマーカー</h3>
+                        <p>NFCタグの代替としてARマーカーを使用。複数のトミカを同時に認識可能。</p>
+                    </div>
+                    <div class="future-item">
+                        <div class="future-icon">🎵</div>
+                        <h3>音声強化</h3>
+                        <p>トミカの名前を音声で読み上げる機能で、より楽しい片付け体験を提供。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ダウンロードセクション -->
+        <section id="download" class="download">
+            <div class="container">
+                <h2 class="section-title">ダウンロード</h2>
+                <div class="download-content">
+                    <div class="download-info">
+                        <h3>現在開発中</h3>
+                        <p>Tomica Vault は現在開発中のアプリです。<br>
+                        GitHub で開発状況を確認できます。</p>
+                        <div class="download-buttons">
+                            <a href="https://github.com/masaway/tomica-vault" class="btn btn-primary" target="_blank">
+                                GitHub で見る
+                            </a>
+                            <a href="https://github.com/masaway/tomica-vault/releases" class="btn btn-secondary" target="_blank">
+                                開発版をダウンロード
+                            </a>
+                        </div>
+                    </div>
+                    <div class="download-requirements">
+                        <h4>動作環境</h4>
+                        <ul>
+                            <li>📱 iOS 12.0 以上</li>
+                            <li>🤖 Android 7.0 以上</li>
+                            <li>🏷️ NFC対応デバイス</li>
+                            <li>📶 インターネット接続</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>🚗 Tomica Vault</h3>
+                    <p>NFCでトミカ管理を楽しく</p>
+                </div>
+                <div class="footer-section">
+                    <h4>リンク</h4>
+                    <ul>
+                        <li><a href="https://github.com/masaway/tomica-vault">GitHub</a></li>
+                        <li><a href="https://github.com/masaway/tomica-vault/issues">バグ報告</a></li>
+                        <li><a href="https://github.com/masaway/tomica-vault/blob/main/docs/企画書.md">企画書</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>技術</h4>
+                    <ul>
+                        <li>React Native</li>
+                        <li>Expo Router</li>
+                        <li>Supabase</li>
+                        <li>NFC Manager</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Tomica Vault. MIT License.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
