@@ -252,6 +252,13 @@ export default function NFCReaderScreen() {
           )}
         </View>
 
+        {/* クレジット表記 */}
+        <View style={styles.creditContainer}>
+          <Text style={styles.creditText}>
+            音声: VOICEVOX: ずんだもん
+          </Text>
+        </View>
+
       </View>
 
       {/* NFCモーダル */}
@@ -380,5 +387,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginLeft: 8,
     flex: 1,
+  },
+  creditContainer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  creditText: {
+    fontSize: 12,
+    color: '#999',
+    textAlign: 'center',
   },
 }); 
