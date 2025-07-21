@@ -423,6 +423,54 @@ export const useAuth = () => {
     return data;
   };
 
+  // ユーザーの認証方法を判定
+  const getAuthProvider = (): 'email' | 'google' | 'unknown' => {
+    if (!authState.user) {
+      return 'unknown';
+    }
+
+    // app_metadataのproviderをチェック
+    const provider = authState.user.app_metadata?.provider;
+    if (provider === 'google') {
+      return 'google';
+    }
+    if (provider === 'email') {
+      return 'email';
+    }
+
+    // identitiesもチェック（より確実）
+    const identities = authState.user.identities;
+    if (identities && identities.length > 0) {
+      const hasGoogle = identities.some(identity => identity.provider === 'google');
+      if (hasGoogle) {
+        return 'google';
+      }
+      const hasEmail = identities.some(identity => identity.provider === 'email');
+      if (hasEmail) {
+        return 'email';
+      }
+    }
+
+    return 'unknown';
+  };
+
+  // OAuthユーザーかどうかを判定
+  const isOAuthUser = (): boolean => {
+    const provider = getAuthProvider();
+    return provider !== 'email' && provider !== 'unknown';
+  };
+
+  // パスワードが設定されているかを判定
+  const hasPassword = (): boolean => {
+    // OAuthユーザーの場合、基本的にパスワードは設定されていない
+    if (isOAuthUser()) {
+      return false;
+    }
+    
+    // emailユーザーの場合、パスワードが設定されている
+    return getAuthProvider() === 'email';
+  };
+
   return {
     // 状態
     user: authState.user,
@@ -441,5 +489,10 @@ export const useAuth = () => {
     updateProfile: updateAuthProfile,
     updateUserProfile,
     fetchProfile,
+    
+    // 認証方法判定関数
+    getAuthProvider,
+    isOAuthUser,
+    hasPassword,
   };
 };
