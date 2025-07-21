@@ -61,19 +61,24 @@ export default function NFCReaderScreen() {
         // スキャン日時を更新
         await updateNfcScanTime(foundTomica.id);
         
-        // 連続スキャン対応: 既存のリストに追加または更新
-        setScannedTomicaList(prevList => {
-          const existingIndex = prevList.findIndex(t => t.id === foundTomica.id);
-          if (existingIndex >= 0) {
-            // 既に存在する場合は更新
-            const updatedList = [...prevList];
-            updatedList[existingIndex] = foundTomica;
-            return updatedList;
-          } else {
-            // 新しい場合は追加
-            return [...prevList, foundTomica];
-          }
-        });
+        // 更新後の最新データを取得
+        const updatedTomica = await getTomicaByNfcTagId(tagId);
+        
+        if (updatedTomica) {
+          // 連続スキャン対応: 既存のリストに追加または更新（更新後のデータを使用）
+          setScannedTomicaList(prevList => {
+            const existingIndex = prevList.findIndex(t => t.id === updatedTomica.id);
+            if (existingIndex >= 0) {
+              // 既に存在する場合は更新
+              const updatedList = [...prevList];
+              updatedList[existingIndex] = updatedTomica;
+              return updatedList;
+            } else {
+              // 新しい場合は追加
+              return [...prevList, updatedTomica];
+            }
+          });
+        }
         
         // モーダルを表示
         setModalVisible(true);
