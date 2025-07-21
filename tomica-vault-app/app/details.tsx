@@ -1,11 +1,14 @@
-import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Alert, Platform, Switch } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Alert, Platform, Switch, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { useTomica, Tomica } from '@/hooks/useTomica';
 import { useAuth } from '@/hooks/useAuth';
 import { determineTomicaSituation } from '@/utils/tomicaUtils';
+import { useThemeColor } from '@/hooks/useThemeColor';
+import Animated from 'react-native-reanimated';
 
 // 日付を日本語形式でフォーマットする関数
 const formatDate = (dateString: string): string => {
@@ -37,11 +40,21 @@ const BasicInfoSection = ({ tomica, onToggleSleep }: { tomica: Tomica; onToggleS
       <Text style={styles.sectionTitle}>基本情報</Text>
       <View style={styles.infoRow}>
         <Text style={styles.label}>名前</Text>
-        <Text style={styles.value}>{tomica.name}</Text>
+        <Animated.Text 
+          style={styles.value}
+          sharedTransitionTag={`tomica-name-${tomica.id}`}
+        >
+          {tomica.name}
+        </Animated.Text>
       </View>
       <View style={styles.infoRow}>
         <Text style={styles.label}>状況</Text>
-        <Text style={[styles.value, situationStyle]}>{situation}</Text>
+        <Animated.Text 
+          style={[styles.value, situationStyle]}
+          sharedTransitionTag={`tomica-situation-${tomica.id}`}
+        >
+          {situation}
+        </Animated.Text>
       </View>
       <View style={styles.infoRow}>
         <Text style={styles.label}>おやすみモード</Text>
@@ -135,6 +148,12 @@ export default function DetailsScreen() {
   const { getTomicaById, toggleSleepMode, deleteTomica } = useTomica();
   const [tomica, setTomica] = useState<Tomica | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // テーマカラーを取得
+  const backgroundColor = useThemeColor({}, 'background');
+  const tintColor = useThemeColor({}, 'tint');
+  const gradientStart = useThemeColor({}, 'gradientStart');
+  const gradientEnd = useThemeColor({}, 'gradientEnd');
 
   useEffect(() => {
     const fetchTomicaDetails = async () => {
@@ -191,7 +210,13 @@ export default function DetailsScreen() {
 
   // カスタムヘッダー
   const CustomHeader = () => (
-    <SafeAreaView edges={['top']} style={{ backgroundColor: '#000' }}>
+    <SafeAreaView 
+      edges={['top', 'left', 'right']} 
+      style={{ 
+        backgroundColor: '#000',
+        paddingTop: Platform.OS === 'ios' ? 0 : 10,
+      }}
+    >
       <View
         style={{
           flexDirection: 'row',
@@ -199,6 +224,7 @@ export default function DetailsScreen() {
           justifyContent: 'space-between',
           minHeight: 56,
           paddingHorizontal: 16,
+          paddingVertical: 8,
           backgroundColor: '#000',
         }}
       >
@@ -211,11 +237,26 @@ export default function DetailsScreen() {
     </SafeAreaView>
   );
 
-  // Stack.Screenでカスタムヘッダーを指定
+  // Stack.Screenでヘッダーを非表示に設定
   return (
     <>
-      <Stack.Screen options={{ header: () => <CustomHeader /> }} />
-      <View style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <StatusBar barStyle="light-content" backgroundColor={gradientStart} />
+      <SafeAreaView style={[styles.container, { backgroundColor }]} edges={['top', 'left', 'right', 'bottom']}>
+        {/* カスタムヘッダー */}
+        <LinearGradient
+          colors={[gradientStart, tintColor, gradientEnd]}
+          style={styles.headerGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Text style={styles.backButtonText}>戻る</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>おもちゃ詳細</Text>
+          <View style={styles.headerSpacer} />
+        </LinearGradient>
+        
         {loading ? (
           <View style={styles.center}><Text>読み込み中...</Text></View>
         ) : !tomica ? (
@@ -248,7 +289,7 @@ export default function DetailsScreen() {
             </View>
           </>
         )}
-      </View>
+      </SafeAreaView>
     </>
   );
 }
@@ -258,26 +299,29 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  header: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+  headerGradient: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  backButtonContainer: {
-    flex: 1,
+    minHeight: 56,
   },
   backButton: {
+    paddingVertical: 8,
+    paddingRight: 16,
+  },
+  backButtonText: {
     fontSize: 16,
     color: '#007AFF',
   },
-  title: {
+  headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    flex: 2,
-    textAlign: 'center',
+    color: '#fff',
+  },
+  headerSpacer: {
+    width: 60,
   },
   content: {
     flex: 1,

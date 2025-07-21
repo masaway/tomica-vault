@@ -22,9 +22,37 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
+        <Stack screenOptions={{
+          // デフォルトのスタック遷移アニメーション設定
+          gestureEnabled: true,
+          gestureDirection: 'horizontal',
+        }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen 
+            name="details" 
+            options={{ 
+              headerShown: false,
+              presentation: 'card',
+              animation: 'slide_from_right',
+            }} 
+          />
+          <Stack.Screen 
+            name="edit" 
+            options={{ 
+              headerShown: false,
+              presentation: 'card',
+              animation: 'slide_from_bottom',
+            }} 
+          />
+          <Stack.Screen 
+            name="nfc-reader" 
+            options={{ 
+              headerShown: false,
+              presentation: 'modal',
+              animation: 'slide_from_bottom',
+            }} 
+          />
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="auto" />

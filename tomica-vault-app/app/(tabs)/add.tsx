@@ -45,7 +45,7 @@ export default function AddScreen() {
 
   const handleNfcScan = async () => {
     if (!nfcState.isSupported) {
-      Alert.alert('エラー', 'NFC機能がサポートされていません');
+      Alert.alert('おもちゃタッチできないよ', 'このスマホはおもちゃタッチできないよ');
       return;
     }
 
@@ -58,21 +58,21 @@ export default function AddScreen() {
         
         if (existingTomica) {
           Alert.alert(
-            'このNFCタグは登録済みです', 
-            `「${existingTomica.name}」に登録されています。\n別のNFCタグを使用してください。`,
+            'このおもちゃはもうなかまだよ', 
+            `「${existingTomica.name}」になっているよ。\nべつのおもちゃをタッチしてみてね。`,
             [{ text: 'OK' }]
           );
           return;
         }
         
         setNfcTagId(tagData.id);
-        Alert.alert('成功', `NFCタグを読み取りました\nID: ${tagData.id}`);
+        Alert.alert('おもちゃタッチできたよ', `おもちゃをタッチできたよ\nID: ${tagData.id}`);
       } else {
-        Alert.alert('エラー', 'NFCタグの読み取りに失敗しました');
+        Alert.alert('おもちゃタッチできなかった', 'おもちゃをもう一度タッチしてみてね');
       }
     } catch (err) {
       console.error('NFCスキャンエラー:', err);
-      Alert.alert('エラー', 'NFCタグの読み取り中にエラーが発生しました');
+      Alert.alert('おもちゃタッチできなかった', 'もう一度チャレンジしてみてね');
     } finally {
       setIsScanning(false);
     }
@@ -81,12 +81,12 @@ export default function AddScreen() {
   const handleSubmit = async () => {
     // 必須項目のバリデーション
     if (!formData.name.trim()) {
-      Alert.alert('エラー', '車名は必須項目です');
+      Alert.alert('おもちゃのなまえをおしえて', 'おもちゃのなまえをいれてね');
       return;
     }
 
     if (!nfcTagId) {
-      Alert.alert('エラー', 'NFCタグをスキャンしてください');
+      Alert.alert('おもちゃタッチしてね', 'おもちゃをスマホにタッチしてね');
       return;
     }
 

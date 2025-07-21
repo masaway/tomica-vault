@@ -14,7 +14,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useAuth } from '../../hooks/useAuth';
 import { FontAwesome } from '@expo/vector-icons';
-import { Image } from 'react-native';
 
 export default function LoginScreen() {
   const { signIn, signInWithGoogle, loading } = useAuth();
@@ -129,11 +128,6 @@ export default function LoginScreen() {
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
-            <Image 
-              source={require('../../assets/images/icon.png')} 
-              style={{ width: 64, height: 64 }} 
-              resizeMode="contain" 
-            />
             <Text style={styles.title}>トイパト</Text>
             <Text style={styles.subtitle}>アカウントにログイン</Text>
           </View>
@@ -361,8 +355,8 @@ const styles = StyleSheet.create({
   },
   footer: {
     alignItems: 'center',
-    marginTop: 40,
-    paddingVertical: 20,
+    marginTop: 0,
+    paddingVertical: 8,
   },
   signupText: {
     color: 'white',

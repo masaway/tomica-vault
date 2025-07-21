@@ -1,13 +1,13 @@
 {
   "expo": {
-    "name": "トイパト",
+    "name": "おもちゃパトロール",
     "slug": "tomica-vault-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "platforms": ["ios", "android", "web"],
     "icon": "./assets/images/icon.png",
     "scheme": "tomicavaultapp",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
@@ -38,7 +38,7 @@
       [
         "react-native-nfc-manager",
         {
-          "nfcPermission": "トミカの管理にNFCを使用します",
+          "nfcPermission": "おもちゃとあそぶためにNFCをつかいます",
           "selectIdentifiers": [
             "D2760000850100",
             "D2760000850101",

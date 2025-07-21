@@ -1,6 +1,7 @@
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useRef, useEffect, useState } from 'react';
 
 interface DashboardCardProps {
   title: string;
@@ -9,6 +10,8 @@ interface DashboardCardProps {
   gradientColors: string[];
   onPress?: () => void;
   subtitle?: string;
+  delay?: number;
+  animationKey?: number;
 }
 
 export function DashboardCard({ 
@@ -17,8 +20,99 @@ export function DashboardCard({
   icon, 
   gradientColors, 
   onPress, 
-  subtitle 
+  subtitle,
+  delay = 0,
+  animationKey = 0
 }: DashboardCardProps) {
+  // 楽しいアニメーション効果のためのAnimated値
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const bounceAnim = useRef(new Animated.Value(0)).current;
+  
+  // フェードイン・スライドインアニメーション
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  
+  // カウントアップアニメーション
+  const countAnim = useRef(new Animated.Value(0)).current;
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    // アニメーション値をリセット
+    fadeAnim.setValue(0);
+    slideAnim.setValue(50);
+    countAnim.setValue(0);
+    setDisplayValue(0);
+
+    // 初期表示アニメーション
+    const showAnimation = Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        delay,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        delay,
+        useNativeDriver: true,
+      })
+    ]);
+
+    // カウントアップアニメーション
+    const numericValue = typeof value === 'string' ? parseInt(value) || 0 : value;
+    const countAnimation = Animated.timing(countAnim, {
+      toValue: numericValue,
+      duration: 1200,
+      delay: delay + 300,
+      useNativeDriver: false,
+    });
+
+    // アニメーション値の監視
+    const listener = countAnim.addListener(({ value }) => {
+      setDisplayValue(Math.floor(value));
+    });
+
+    // アニメーション実行
+    showAnimation.start(() => {
+      countAnimation.start();
+    });
+
+    return () => {
+      countAnim.removeListener(listener);
+    };
+  }, [value, delay, fadeAnim, slideAnim, countAnim, animationKey]);
+
+  // タッチ時のバウンスアニメーション
+  const handlePressIn = () => {
+    Animated.parallel([
+      Animated.spring(scaleAnim, {
+        toValue: 0.95,
+        useNativeDriver: true,
+        speed: 20,
+      }),
+      Animated.spring(bounceAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        speed: 15,
+      })
+    ]).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.parallel([
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        speed: 20,
+      }),
+      Animated.spring(bounceAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        speed: 15,
+      })
+    ]).start();
+  };
 
   const CardContent = (
     <LinearGradient
@@ -30,10 +124,20 @@ export function DashboardCard({
       <View style={styles.cardContent}>
         <Text style={styles.title}>{title}</Text>
         <View style={styles.iconAndValueContainer}>
-          <View style={styles.iconContainer}>
+          <Animated.View style={[
+            styles.iconContainer,
+            {
+              transform: [
+                { rotate: bounceAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ['0deg', '10deg']
+                })}
+              ]
+            }
+          ]}>
             <Ionicons name={icon} size={24} color="#fff" />
-          </View>
-          <Text style={styles.value}>{value}</Text>
+          </Animated.View>
+          <Text style={styles.value}>{displayValue}</Text>
         </View>
         {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
       </View>
@@ -42,16 +146,39 @@ export function DashboardCard({
 
   if (onPress) {
     return (
-      <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
-        {CardContent}
-      </TouchableOpacity>
+      <Animated.View style={[
+        styles.card,
+        {
+          opacity: fadeAnim,
+          transform: [
+            { scale: scaleAnim },
+            { translateY: slideAnim }
+          ]
+        }
+      ]}>
+        <TouchableOpacity 
+          onPress={onPress} 
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          activeOpacity={1}
+          style={{ borderRadius: 16 }}
+        >
+          {CardContent}
+        </TouchableOpacity>
+      </Animated.View>
     );
   }
 
   return (
-    <View style={styles.card}>
+    <Animated.View style={[
+      styles.card,
+      {
+        opacity: fadeAnim,
+        transform: [{ translateY: slideAnim }]
+      }
+    ]}>
       {CardContent}
-    </View>
+    </Animated.View>
   );
 }
 
