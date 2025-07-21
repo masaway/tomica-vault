@@ -207,6 +207,12 @@ export default function LoginScreen() {
             >
               <Text style={styles.forgotPasswordText}>パスワードを忘れた方</Text>
             </TouchableOpacity>
+
+            <View style={styles.infoContainer}>
+              <Text style={styles.infoText}>
+                💡 同じメールアドレスでGoogleログインとパスワードログインの両方が利用できます
+              </Text>
+            </View>
           </View>
 
           <View style={styles.footer}>
@@ -378,5 +384,19 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  infoContainer: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: '#f0f8ff',
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#4facfe',
+  },
+  infoText: {
+    color: '#2c5aa0',
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: 'center',
   },
 });

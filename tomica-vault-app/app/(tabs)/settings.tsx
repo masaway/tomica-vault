@@ -9,8 +9,12 @@ export default function SettingsScreen() {
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const borderColor = useThemeColor({}, 'border');
-  const { user, signOut } = useAuth();
+  const { user, signOut, getAuthProvider, hasPassword } = useAuth();
   const { audioState, setEnabled, playSuccessSound } = useAudio();
+  
+  const authProvider = getAuthProvider();
+  const userHasPassword = hasPassword();
+  const isPasswordSetup = authProvider === 'google' && !userHasPassword;
 
   const handleLogout = async () => {
     Alert.alert(
@@ -42,8 +46,7 @@ export default function SettingsScreen() {
   };
 
   const handlePasswordChange = () => {
-    // TODO: パスワード変更画面の実装
-    Alert.alert('準備中', 'パスワード変更機能は準備中です');
+    router.push('/change-password');
   };
 
   const handleAbout = () => {
@@ -86,6 +89,10 @@ export default function SettingsScreen() {
               <Text style={[styles.userSubtext, { color: textColor }]}>
                 ユーザーID: {user?.id?.slice(0, 8)}...
               </Text>
+              <Text style={[styles.authMethodText, { color: textColor }]}>
+                🔐 利用可能な認証方法: {authProvider === 'google' ? 'Google' : 'Email'}
+                {authProvider === 'google' && userHasPassword && ' + パスワード'}
+              </Text>
             </View>
           </View>
 
@@ -102,8 +109,15 @@ export default function SettingsScreen() {
             style={[styles.settingItem, { borderBottomColor: borderColor }]}
             onPress={handlePasswordChange}
           >
-            <FontAwesome name="lock" size={16} color={textColor} style={styles.icon} />
-            <Text style={[styles.settingText, { color: textColor }]}>パスワード変更</Text>
+            <FontAwesome 
+              name={isPasswordSetup ? "plus-circle" : "lock"} 
+              size={16} 
+              color={textColor} 
+              style={styles.icon} 
+            />
+            <Text style={[styles.settingText, { color: textColor }]}>
+              {isPasswordSetup ? 'パスワード設定' : 'パスワード変更'}
+            </Text>
             <FontAwesome name="chevron-right" size={12} color={textColor} />
           </TouchableOpacity>
         </View>
@@ -197,6 +211,12 @@ const styles = StyleSheet.create({
   userSubtext: {
     fontSize: 12,
     opacity: 0.7,
+  },
+  authMethodText: {
+    fontSize: 12,
+    opacity: 0.8,
+    marginTop: 4,
+    fontStyle: 'italic',
   },
   settingItem: {
     flexDirection: 'row',
