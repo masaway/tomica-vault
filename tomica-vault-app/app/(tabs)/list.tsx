@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, FlatList, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, FlatList, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { useEffect, useState } from 'react';
 import { NFCShortcut } from '../../components/NFCShortcut';
 import { useTomica, Tomica } from '@/hooks/useTomica';
@@ -13,12 +13,15 @@ import React from 'react';
 
 export default function ListScreen() {
   const { user, loading: authLoading } = useAuth();
-  const { tomicaList, loading, error, fetchTomicaList } = useTomica();
+  const { tomicaList, loading, error, fetchTomicaList, searchTomica } = useTomica();
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<'all' | 'おうち' | 'おでかけ' | 'まいご' | 'おやすみ'>('all');
+  const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState(query);
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const borderColor = useThemeColor({}, 'icon');
+  const cardColor = useThemeColor({}, 'cardBackground');
   const { filter: urlFilter } = useLocalSearchParams<{ filter?: string }>();
 
   // URLパラメータからフィルターを設定
@@ -27,6 +30,21 @@ export default function ListScreen() {
       setFilter(urlFilter as typeof filter);
     }
   }, [urlFilter]);
+
+  // 検索バーの入力を300msデバウンス
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedQuery(query), 300);
+    return () => clearTimeout(handler);
+  }, [query]);
+
+  // 検索クエリが空欄なら全件取得、入力があれば検索
+  useEffect(() => {
+    if (debouncedQuery.trim() !== '') {
+      searchTomica(debouncedQuery);
+    } else {
+      fetchTomicaList();
+    }
+  }, [debouncedQuery]);
 
   // 画面フォーカス時に最新リスト取得
   useFocusEffect(
@@ -63,6 +81,21 @@ export default function ListScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor }]}>
+      {/* 検索バーの高さ分スペース（半分の28pxに変更） */}
+      <View style={{ height: 28 }} />
+      {/* 検索バー */}
+      <View style={styles.header}>
+        <TextInput
+          style={[
+            styles.input,
+            { borderColor: borderColor, backgroundColor: cardColor, color: textColor },
+          ]}
+          value={query}
+          onChangeText={setQuery}
+          placeholder="おもちゃ名で検索"
+          placeholderTextColor={borderColor}
+        />
+      </View>
       {/* フィルタカード */}
       <View style={styles.filterRow}>
         {['all', 'おうち', 'おでかけ', 'まいご', 'おやすみ'].map((key) => (
@@ -94,7 +127,10 @@ export default function ListScreen() {
         </View>
       ) : (
         <FlatList
-          data={filteredList.sort((a, b) => {
+          data={tomicaList.filter(item => {
+            if (filter === 'all') return true;
+            return determineTomicaSituation(item) === filter;
+          }).sort((a, b) => {
             const situationA = determineTomicaSituation(a);
             const situationB = determineTomicaSituation(b);
             return situationOrder[situationA] - situationOrder[situationB];
@@ -102,6 +138,11 @@ export default function ListScreen() {
           renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.list}
+          ListEmptyComponent={
+            debouncedQuery.trim() !== '' ? (
+              <Text style={{ textAlign: 'center', marginTop: 32 }}>該当データがありません</Text>
+            ) : null
+          }
         />
       )}
       <NFCShortcut />
@@ -116,6 +157,12 @@ const styles = StyleSheet.create({
   header: {
     padding: 16,
     borderBottomWidth: 1,
+  },
+  input: {
+    height: 40,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 16,
   },
   title: {
     fontSize: 24,
