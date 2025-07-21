@@ -7,6 +7,7 @@ import { useTomica } from '../hooks/useTomica';
 import { useNFC } from '../hooks/useNFC';
 import { useThemeColor } from '../hooks/useThemeColor';
 import { Database } from '../types/supabase';
+import { determineTomicaSituation } from '@/utils/tomicaUtils';
 
 export default function EditScreen() {
   const router = useRouter();
@@ -42,6 +43,12 @@ export default function EditScreen() {
   };
 
   const handleSave = async () => {
+    // 追加: まいご判定
+    if (determineTomicaSituation(tomica) === 'まいご') {
+      Alert.alert('エラー', 'まいごの時はスキャンしてください');
+      return;
+    }
+
     if (!name.trim()) {
       Alert.alert('エラー', '名前を入力してください');
       return;

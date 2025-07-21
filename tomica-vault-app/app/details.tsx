@@ -148,6 +148,15 @@ export default function DetailsScreen() {
   const { getTomicaById, toggleSleepMode, deleteTomica } = useTomica();
   const [tomica, setTomica] = useState<Tomica | null>(null);
   const [loading, setLoading] = useState(true);
+  // --- 追加: おやすみモードのローカルstate ---
+  const [isSleeping, setIsSleeping] = useState(false);
+
+  // tomica取得後にstateを同期
+  useEffect(() => {
+    if (tomica) {
+      setIsSleeping(tomica.is_sleeping === true);
+    }
+  }, [tomica?.is_sleeping]);
   
   // テーマカラーを取得
   const backgroundColor = useThemeColor({}, 'background');
@@ -167,16 +176,17 @@ export default function DetailsScreen() {
     fetchTomicaDetails();
   }, [params.id, user, authLoading, getTomicaById]);
 
-  const handleToggleSleep = async (isSleeping: boolean) => {
+  // --- 楽観的UI更新 ---
+  const handleToggleSleep = async (nextValue: boolean) => {
     if (!tomica) return;
-    
+    setIsSleeping(nextValue); // 1. 先にUIを即時更新
     try {
-      await toggleSleepMode(tomica.id, isSleeping);
+      await toggleSleepMode(tomica.id, nextValue); // 2. バックグラウンドでAPI
       // データを再取得して画面を更新
       const updatedData = await getTomicaById(tomica.id);
       setTomica(updatedData);
     } catch (error) {
-      console.error('おやすみモード切り替えエラー:', error);
+      setIsSleeping(!nextValue); // 3. 失敗時は元に戻す
       Alert.alert('エラー', 'おやすみモードの切り替えに失敗しました');
     }
   };
@@ -265,7 +275,7 @@ export default function DetailsScreen() {
           <>
             <ScrollView style={styles.content}>
               {/* 基本情報 */}
-              <BasicInfoSection tomica={tomica} onToggleSleep={handleToggleSleep} />
+              <BasicInfoSection tomica={{...tomica, is_sleeping: isSleeping}} onToggleSleep={handleToggleSleep} />
               {/* メモを移動履歴の位置（2番目）に移動 */}
               <MemoSection tomica={tomica} />
               {/* 登録情報 */}
