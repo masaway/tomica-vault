@@ -1,6 +1,7 @@
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useRef } from 'react';
 
 interface DashboardCardProps {
   title: string;
@@ -19,6 +20,40 @@ export function DashboardCard({
   onPress, 
   subtitle 
 }: DashboardCardProps) {
+  // 楽しいアニメーション効果のためのAnimated値
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const bounceAnim = useRef(new Animated.Value(0)).current;
+
+  // タッチ時のバウンスアニメーション
+  const handlePressIn = () => {
+    Animated.parallel([
+      Animated.spring(scaleAnim, {
+        toValue: 0.95,
+        useNativeDriver: true,
+        speed: 20,
+      }),
+      Animated.spring(bounceAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        speed: 15,
+      })
+    ]).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.parallel([
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        speed: 20,
+      }),
+      Animated.spring(bounceAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        speed: 15,
+      })
+    ]).start();
+  };
 
   const CardContent = (
     <LinearGradient
@@ -30,9 +65,19 @@ export function DashboardCard({
       <View style={styles.cardContent}>
         <Text style={styles.title}>{title}</Text>
         <View style={styles.iconAndValueContainer}>
-          <View style={styles.iconContainer}>
+          <Animated.View style={[
+            styles.iconContainer,
+            {
+              transform: [
+                { rotate: bounceAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ['0deg', '10deg']
+                })}
+              ]
+            }
+          ]}>
             <Ionicons name={icon} size={24} color="#fff" />
-          </View>
+          </Animated.View>
           <Text style={styles.value}>{value}</Text>
         </View>
         {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
@@ -42,9 +87,22 @@ export function DashboardCard({
 
   if (onPress) {
     return (
-      <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
-        {CardContent}
-      </TouchableOpacity>
+      <Animated.View style={[
+        styles.card,
+        {
+          transform: [{ scale: scaleAnim }]
+        }
+      ]}>
+        <TouchableOpacity 
+          onPress={onPress} 
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          activeOpacity={1}
+          style={{ borderRadius: 16 }}
+        >
+          {CardContent}
+        </TouchableOpacity>
+      </Animated.View>
     );
   }
 

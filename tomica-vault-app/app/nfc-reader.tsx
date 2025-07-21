@@ -146,7 +146,7 @@ export default function NFCReaderScreen() {
 
   // カスタムヘッダー
   const CustomHeader = () => (
-    <SafeAreaView edges={[]} style={{ backgroundColor: '#000' }}>
+    <SafeAreaView edges={['top']} style={{ backgroundColor: '#000' }}>
       <View
         style={{
           flexDirection: 'row',

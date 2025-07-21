@@ -7,7 +7,7 @@
     "platforms": ["ios", "android", "web"],
     "icon": "./assets/images/icon.png",
     "scheme": "tomicavaultapp",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true

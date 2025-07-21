@@ -9,6 +9,7 @@ import { NFCShortcut } from '../../components/NFCShortcut';
 import { DashboardCard } from '../../components/DashboardCard';
 import { RecentActivity } from '../../components/RecentActivity';
 import { QuickActions } from '../../components/QuickActions';
+import { PlayfulLoadingSpinner } from '../../components/PlayfulLoadingSpinner';
 import { useThemeColor } from '../../hooks/useThemeColor';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -72,7 +73,7 @@ export default function HomeScreen() {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor }]} edges={['top', 'left', 'right']}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={tintColor} />
+          <PlayfulLoadingSpinner size={60} color={tintColor} />
           <Text style={[styles.loadingText, { color: textColor }]}>じゅんびちゅう...</Text>
         </View>
       </SafeAreaView>
@@ -133,7 +134,7 @@ export default function HomeScreen() {
                   title="おもちゃ図鑑"
                   value={stats.total}
                   icon="car-sport"
-                  gradientColors={['#9C88FF', '#8976D4']}
+                  gradientColors={['#FF6B9D', '#FFE66D']}
                   onPress={() => navigateToList()}
                   subtitle={`ねんねちゅう: ${stats.sleeping}`}
                 />
@@ -141,7 +142,7 @@ export default function HomeScreen() {
                   title="おでかけ中"
                   value={stats.checkedOut}
                   icon="car"
-                  gradientColors={['#FF6B6B', '#FF8E53']}
+                  gradientColors={['#4ECDC4', '#4A90FF']}
                   onPress={() => navigateToList('おでかけ')}
                 />
               </View>
@@ -150,14 +151,14 @@ export default function HomeScreen() {
                   title="おうちにいるよ"
                   value={stats.checkedIn}
                   icon="home"
-                  gradientColors={['#66BB6A', '#4CAF50']}
+                  gradientColors={['#48BB78', '#4ECDC4']}
                   onPress={() => navigateToList('おうち')}
                 />
                 <DashboardCard
                   title="まいごさん"
                   value={stats.missing}
                   icon="warning"
-                  gradientColors={['#FF6B6B', '#FF5252']}
+                  gradientColors={['#F56565', '#FF6B9D']}
                   onPress={() => navigateToList('まいご')}
                 />
               </View>
