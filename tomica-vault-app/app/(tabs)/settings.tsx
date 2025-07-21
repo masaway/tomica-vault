@@ -64,27 +64,7 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleTestSound = () => {
-    console.log('🧪 テスト音再生ボタンが押されました');
-    playSuccessSound().catch(error => {
-      console.error('🧪 テスト音の再生に失敗:', error);
-      Alert.alert('エラー', `テスト音の再生に失敗しました: ${error.message}`);
-    });
-  };
 
-  const handleAudioDebugInfo = () => {
-    const debugInfo = `
-音声状態デバッグ情報:
-- 有効: ${audioState.isEnabled ? 'はい' : 'いいえ'}
-- 読み込み済み: ${audioState.isLoaded ? 'はい' : 'いいえ'}
-- 再生中: ${audioState.isPlaying ? 'はい' : 'いいえ'}
-- 音量: ${Math.round(audioState.volume * 100)}%
-- エラー: ${audioState.error || 'なし'}
-- プラットフォーム: ${Platform.OS}
-    `.trim();
-    
-    Alert.alert('音声デバッグ情報', debugInfo);
-  };
 
   return (
     <View style={[styles.container, { backgroundColor }]}>
@@ -143,29 +123,8 @@ export default function SettingsScreen() {
             />
           </View>
 
-          <TouchableOpacity 
-            style={[styles.settingItem, { borderBottomColor: borderColor }]}
-            onPress={handleTestSound}
-          >
-            <FontAwesome name="play-circle" size={16} color={textColor} style={styles.icon} />
-            <Text style={[styles.settingText, { color: textColor }]}>テスト音再生</Text>
-            <FontAwesome name="chevron-right" size={12} color={textColor} />
-          </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={[styles.settingItem, { borderBottomColor: borderColor }]}
-            onPress={handleAudioDebugInfo}
-          >
-            <FontAwesome name="bug" size={16} color={textColor} style={styles.icon} />
-            <Text style={[styles.settingText, { color: textColor }]}>音声デバッグ情報</Text>
-            <FontAwesome name="chevron-right" size={12} color={textColor} />
-          </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.settingItem, { borderBottomColor: borderColor }]}>
-            <FontAwesome name="bell" size={16} color={textColor} style={styles.icon} />
-            <Text style={[styles.settingText, { color: textColor }]}>通知設定</Text>
-            <FontAwesome name="chevron-right" size={12} color={textColor} />
-          </TouchableOpacity>
 
           <TouchableOpacity 
             style={[styles.settingItem, { borderBottomColor: borderColor }]}

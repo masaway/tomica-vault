@@ -216,7 +216,9 @@ export default function AddScreen() {
         onPress={handleSubmit}
         disabled={loading || !nfcTagId}
       >
-        <Text style={styles.submitButtonText}>
+        <Text style={[styles.submitButtonText, { 
+          color: (loading || !nfcTagId) ? '#999' : '#fff' 
+        }]}>
           {loading ? '登録中...' : 'おもちゃを登録する'}
         </Text>
       </Pressable>
