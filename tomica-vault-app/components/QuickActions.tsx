@@ -36,12 +36,6 @@ export function QuickActions() {
       color: '#4ECDC4',
     },
     {
-      title: '検索',
-      icon: 'search' as const,
-      onPress: () => router.push('/(tabs)/search'),
-      color: '#9C88FF',
-    },
-    {
       title: '一覧表示',
       icon: 'list' as const,
       onPress: () => router.push('/(tabs)/list'),
