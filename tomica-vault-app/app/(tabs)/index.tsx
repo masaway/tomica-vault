@@ -7,7 +7,6 @@ import { useAuth } from '../../hooks/useAuth';
 import { NFCShortcut } from '../../components/NFCShortcut';
 import { DashboardCard } from '../../components/DashboardCard';
 import { RecentActivity } from '../../components/RecentActivity';
-import { QuickActions } from '../../components/QuickActions';
 import { PlayfulLoadingSpinner } from '../../components/PlayfulLoadingSpinner';
 import { useThemeColor } from '../../hooks/useThemeColor';
 import { router, useFocusEffect } from 'expo-router';
@@ -219,8 +218,6 @@ export default function HomeScreen() {
               </View>
             </View>
 
-            <QuickActions />
-            
             <RecentActivity activities={stats.recentActivity} animationKey={animationKey} />
           </>
         )}
