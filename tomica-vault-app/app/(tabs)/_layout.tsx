@@ -91,14 +91,6 @@ export default function TabLayout() {
         // }}
       />
       <Tabs.Screen
-        name="search"
-        options={{
-          title: '検索',
-          tabBarIcon: ({ color }) => <FontAwesome name="search" size={28} color={color} />,
-          header: () => <CustomHeader title="おもちゃ検索" />,
-        }}
-      />
-      <Tabs.Screen
         name="settings"
         options={{
           title: '設定',
