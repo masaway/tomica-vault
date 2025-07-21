@@ -73,7 +73,7 @@ export default function HomeScreen() {
       <SafeAreaView style={[styles.container, { backgroundColor }]} edges={['top', 'left', 'right']}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={tintColor} />
-          <Text style={[styles.loadingText, { color: textColor }]}>読み込み中...</Text>
+          <Text style={[styles.loadingText, { color: textColor }]}>じゅんびちゅう...</Text>
         </View>
       </SafeAreaView>
     );
@@ -135,7 +135,7 @@ export default function HomeScreen() {
                   icon="car-sport"
                   gradientColors={['#9C88FF', '#8976D4']}
                   onPress={() => navigateToList()}
-                  subtitle={`おやすみ: ${stats.sleeping}`}
+                  subtitle={`ねんねちゅう: ${stats.sleeping}`}
                 />
                 <DashboardCard
                   title="おでかけ中"
@@ -195,7 +195,7 @@ export default function HomeScreen() {
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.notificationTitle}>
-                        {item.name} が <Text style={{ color: '#e74c3c', fontWeight: 'bold' }}>家出中</Text> になりました
+                        {item.name} が <Text style={{ color: '#e74c3c', fontWeight: 'bold' }}>まいごさん</Text> になりました
                       </Text>
                       <Text style={styles.notificationDate}>
                         {new Date(item.timestamp).toLocaleString('ja-JP')}
@@ -207,7 +207,7 @@ export default function HomeScreen() {
             ) : (
               <View style={styles.emptyNotification}>
                 <Ionicons name="notifications-off" size={48} color="#ccc" style={{ marginBottom: 8 }} />
-                <Text style={{ color: '#888' }}>家出中の通知はありません</Text>
+                <Text style={{ color: '#888' }}>まいごさんの通知はありません</Text>
               </View>
             )}
           </View>
