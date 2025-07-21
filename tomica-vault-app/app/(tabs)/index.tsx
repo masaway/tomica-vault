@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { StyleSheet, View, Text, ScrollView, RefreshControl, Modal, TouchableOpacity, Animated } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, RefreshControl, Modal, TouchableOpacity, Animated, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Stack, router, useFocusEffect } from 'expo-router';
 import { useTomica } from '../../hooks/useTomica';
 import { useAuth } from '../../hooks/useAuth';
 import { NFCShortcut } from '../../components/NFCShortcut';
@@ -9,7 +10,6 @@ import { DashboardCard } from '../../components/DashboardCard';
 import { RecentActivity } from '../../components/RecentActivity';
 import { PlayfulLoadingSpinner } from '../../components/PlayfulLoadingSpinner';
 import { useThemeColor } from '../../hooks/useThemeColor';
-import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -67,11 +67,16 @@ export default function HomeScreen() {
     };
   }, [floatAnim]);
 
-  // ホーム画面にフォーカスしたときにアニメーションをリセット
+  // ホーム画面にフォーカスしたときにアニメーションをリセットし、データを更新
   useFocusEffect(
     useCallback(() => {
       setAnimationKey(prev => prev + 1);
-    }, [])
+      // 認証が完了していてユーザーが存在する場合のみデータを更新
+      if (!authLoading && user) {
+        console.log('ホーム画面フォーカス - データを更新');
+        fetchStats();
+      }
+    }, [authLoading, user, fetchStats])
   );
 
   const onRefresh = async () => {
@@ -101,39 +106,33 @@ export default function HomeScreen() {
     setModalVisible(true);
   };
 
-  if (loading && !refreshing) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor }]} edges={['top', 'left', 'right']}>
-        <View style={styles.loadingContainer}>
-          <PlayfulLoadingSpinner size={60} color={tintColor} />
-          <Text style={[styles.loadingText, { color: textColor }]}>じゅんびちゅう...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (error) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor }]} edges={['top', 'left', 'right']}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  return (
-    <SafeAreaView style={[styles.container, { backgroundColor }]} edges={['top', 'left', 'right']}>
-      <LinearGradient
-        colors={[gradientStart, tintColor, gradientEnd]}
-        style={styles.headerGradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+  // カスタムヘッダー
+  const CustomHeader = () => (
+    <View style={{ backgroundColor: gradientStart }}>
+      <StatusBar 
+        barStyle="light-content" 
+        backgroundColor={gradientStart} 
+        translucent={false}
+      />
+      <SafeAreaView edges={['top']} style={{ backgroundColor: gradientStart }}>
+        <LinearGradient
+          colors={[gradientStart, tintColor, gradientEnd]}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: 56,
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            position: 'relative',
+          }}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+        <View style={{ flex: 1, alignItems: 'center' }}>
           <Animated.Text 
             style={[
-              styles.title,
+              styles.headerTitle,
               {
                 transform: [{
                   translateY: floatAnim.interpolate({
@@ -146,21 +145,58 @@ export default function HomeScreen() {
           >
             おもちゃパトロール
           </Animated.Text>
-          <TouchableOpacity
-            style={{ marginLeft: 8, position: 'absolute', right: 0 }}
-            onPress={handleOpenModal}
-            accessibilityLabel="通知"
-          >
-            <Ionicons name="notifications-outline" size={28} color="#fff" />
-            {unreadCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{unreadCount}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
         </View>
-        <Text style={styles.subtitle}>みんなのおもちゃがいっぱい</Text>
-      </LinearGradient>
+        <TouchableOpacity
+          style={styles.notificationButton}
+          onPress={handleOpenModal}
+          accessibilityLabel="通知"
+        >
+          <Ionicons name="notifications-outline" size={24} color="#fff" />
+          {unreadCount > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{unreadCount}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+        </LinearGradient>
+      </SafeAreaView>
+    </View>
+  );
+
+  if (loading && !refreshing) {
+    return (
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={[styles.container, { backgroundColor }]}>
+          <CustomHeader />
+          <View style={styles.loadingContainer}>
+            <PlayfulLoadingSpinner size={60} color={tintColor} />
+            <Text style={[styles.loadingText, { color: textColor }]}>じゅんびちゅう...</Text>
+          </View>
+        </View>
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={[styles.container, { backgroundColor }]}>
+          <CustomHeader />
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        </View>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <View style={[styles.container, { backgroundColor }]}>
+        <CustomHeader />
 
       <ScrollView
         style={[styles.content, { backgroundColor }]}
@@ -266,7 +302,8 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
+    </>
   );
 }
 
@@ -274,22 +311,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  headerGradient: {
-    paddingHorizontal: 20,
-    paddingVertical: 24,
-  },
-  title: {
-    fontSize: 28,
+  headerTitle: {
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#fff',
     textAlign: 'center',
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#fff',
-    textAlign: 'center',
-    marginTop: 8,
-    opacity: 0.9,
+  notificationButton: {
+    position: 'absolute',
+    right: 16,
+    paddingVertical: 8,
+    paddingLeft: 8,
   },
   content: {
     flex: 1,
