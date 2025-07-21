@@ -1,8 +1,7 @@
-import React from 'react';
-import { StyleSheet, View, Text, ScrollView, ActivityIndicator, RefreshControl, Modal, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { StyleSheet, View, Text, ScrollView, RefreshControl, Modal, TouchableOpacity, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useEffect, useState } from 'react';
 import { useTomica } from '../../hooks/useTomica';
 import { useAuth } from '../../hooks/useAuth';
 import { NFCShortcut } from '../../components/NFCShortcut';
@@ -11,7 +10,7 @@ import { RecentActivity } from '../../components/RecentActivity';
 import { QuickActions } from '../../components/QuickActions';
 import { PlayfulLoadingSpinner } from '../../components/PlayfulLoadingSpinner';
 import { useThemeColor } from '../../hooks/useThemeColor';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -26,6 +25,12 @@ export default function HomeScreen() {
   const gradientEnd = useThemeColor({}, 'gradientEnd');
   const [modalVisible, setModalVisible] = useState(false);
   const [lastRead, setLastRead] = useState<string | null>(null);
+  
+  // ヘッダータイトルのふわふわアニメーション
+  const floatAnim = useRef(new Animated.Value(0)).current;
+  
+  // アニメーション制御用のキー（画面フォーカス時にインクリメント）
+  const [animationKey, setAnimationKey] = useState(0);
 
   useEffect(() => {
     // 認証が完了してからデータを取得
@@ -40,7 +45,35 @@ export default function HomeScreen() {
       const stored = await AsyncStorage.getItem('notification_last_read');
       if (stored) setLastRead(stored);
     })();
-  }, []);
+    
+    // ヘッダータイトルの浮遊アニメーション開始
+    const floatAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    floatAnimation.start();
+
+    return () => {
+      floatAnimation.stop();
+    };
+  }, [floatAnim]);
+
+  // ホーム画面にフォーカスしたときにアニメーションをリセット
+  useFocusEffect(
+    useCallback(() => {
+      setAnimationKey(prev => prev + 1);
+    }, [])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -99,7 +132,21 @@ export default function HomeScreen() {
         end={{ x: 1, y: 1 }}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={styles.title}>おもちゃパトロール</Text>
+          <Animated.Text 
+            style={[
+              styles.title,
+              {
+                transform: [{
+                  translateY: floatAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, -3]
+                  })
+                }]
+              }
+            ]}
+          >
+            おもちゃパトロール
+          </Animated.Text>
           <TouchableOpacity
             style={{ marginLeft: 8, position: 'absolute', right: 0 }}
             onPress={handleOpenModal}
@@ -137,6 +184,8 @@ export default function HomeScreen() {
                   gradientColors={['#FF6B9D', '#FFE66D']}
                   onPress={() => navigateToList()}
                   subtitle={`ねんねちゅう: ${stats.sleeping}`}
+                  delay={0}
+                  animationKey={animationKey}
                 />
                 <DashboardCard
                   title="おでかけ中"
@@ -144,6 +193,8 @@ export default function HomeScreen() {
                   icon="car"
                   gradientColors={['#4ECDC4', '#4A90FF']}
                   onPress={() => navigateToList('おでかけ')}
+                  delay={100}
+                  animationKey={animationKey}
                 />
               </View>
               <View style={styles.statsRow}>
@@ -153,6 +204,8 @@ export default function HomeScreen() {
                   icon="home"
                   gradientColors={['#48BB78', '#4ECDC4']}
                   onPress={() => navigateToList('おうち')}
+                  delay={200}
+                  animationKey={animationKey}
                 />
                 <DashboardCard
                   title="まいごさん"
@@ -160,13 +213,15 @@ export default function HomeScreen() {
                   icon="warning"
                   gradientColors={['#F56565', '#FF6B9D']}
                   onPress={() => navigateToList('まいご')}
+                  delay={300}
+                  animationKey={animationKey}
                 />
               </View>
             </View>
 
             <QuickActions />
             
-            <RecentActivity activities={stats.recentActivity} />
+            <RecentActivity activities={stats.recentActivity} animationKey={animationKey} />
           </>
         )}
       </ScrollView>

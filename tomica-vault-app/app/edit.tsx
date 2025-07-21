@@ -1,9 +1,11 @@
-import { StyleSheet, View, Text, TextInput, ScrollView, TouchableOpacity, Alert, Switch } from 'react-native';
+import { StyleSheet, View, Text, TextInput, ScrollView, TouchableOpacity, Alert, Switch, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTomica } from '../hooks/useTomica';
 import { useNFC } from '../hooks/useNFC';
+import { useThemeColor } from '../hooks/useThemeColor';
 import { Database } from '../types/supabase';
 
 export default function EditScreen() {
@@ -21,6 +23,12 @@ export default function EditScreen() {
   const { readNfcTag, nfcState } = useNFC();
   const [isLoading, setIsLoading] = useState(false);
   const [isNfcReregistering, setIsNfcReregistering] = useState(false);
+
+  // テーマカラーを取得
+  const backgroundColor = useThemeColor({}, 'background');
+  const tintColor = useThemeColor({}, 'tint');
+  const gradientStart = useThemeColor({}, 'gradientStart');
+  const gradientEnd = useThemeColor({}, 'gradientEnd');
 
   // 編集後に最新詳細画面へ遷移するナビゲーション処理を関数化
   const navigateToLatestDetails = (router: ReturnType<typeof useRouter>, tomicaId: number) => {
@@ -153,8 +161,22 @@ export default function EditScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ header: () => <CustomHeader /> }} />
-      <View style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <StatusBar barStyle="light-content" backgroundColor={gradientStart} />
+      <SafeAreaView style={[styles.container, { backgroundColor }]} edges={['top', 'left', 'right', 'bottom']}>
+        {/* カスタムヘッダー */}
+        <LinearGradient
+          colors={[gradientStart, tintColor, gradientEnd]}
+          style={styles.headerGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Text style={styles.backButtonText}>キャンセル</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>おもちゃ編集</Text>
+          <View style={styles.headerSpacer} />
+        </LinearGradient>
         <ScrollView style={styles.content}>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>基本情報</Text>
@@ -263,7 +285,7 @@ export default function EditScreen() {
           </Text>
         </TouchableOpacity>
       </View>
-    </View>
+      </SafeAreaView>
     </>
   );
 }
@@ -273,35 +295,29 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  header: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+  headerGradient: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  backButtonContainer: {
-    flex: 1,
+    minHeight: 56,
   },
   backButton: {
+    paddingVertical: 8,
+    paddingRight: 16,
+  },
+  backButtonText: {
     fontSize: 16,
     color: '#007AFF',
   },
-  title: {
+  headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    flex: 2,
-    textAlign: 'center',
+    color: '#fff',
   },
-  saveButtonContainer: {
-    flex: 1,
-    alignItems: 'flex-end',
-  },
-  saveButton: {
-    fontSize: 16,
-    color: '#007AFF',
-    fontWeight: 'bold',
+  headerSpacer: {
+    width: 60,
   },
   content: {
     flex: 1,

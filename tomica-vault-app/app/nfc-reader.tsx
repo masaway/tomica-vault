@@ -1,11 +1,13 @@
 import { StyleSheet, View, Text, TouchableOpacity, Alert, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState, useCallback } from 'react';
 import { useNFC } from '@/hooks/useNFC';
 import { useNFCEnvironment } from '@/hooks/useNFCEnvironment';
 import { useTomica, Tomica } from '@/hooks/useTomica';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import { logEnvironmentInfo } from '@/constants/Environment';
 import NFCModal from '@/components/NFCModal';
 
@@ -13,6 +15,12 @@ export default function NFCReaderScreen() {
   const { nfcState, startAutoScan, stopAutoScan } = useNFC();
   const { environmentName, isNFCAvailable } = useNFCEnvironment();
   const { getTomicaByNfcTagId, updateNfcScanTime, updateTomica, toggleSleepMode } = useTomica();
+  
+  // テーマカラーを取得
+  const backgroundColor = useThemeColor({}, 'background');
+  const tintColor = useThemeColor({}, 'tint');
+  const gradientStart = useThemeColor({}, 'gradientStart');
+  const gradientEnd = useThemeColor({}, 'gradientEnd');
   
   // モーダル状態管理
   const [modalVisible, setModalVisible] = useState(false);
@@ -146,23 +154,26 @@ export default function NFCReaderScreen() {
 
   // カスタムヘッダー
   const CustomHeader = () => (
-    <SafeAreaView edges={['top']} style={{ backgroundColor: '#000' }}>
-      <View
+    <SafeAreaView edges={['top']} style={{ backgroundColor: gradientStart }}>
+      <LinearGradient
+        colors={[gradientStart, tintColor, gradientEnd]}
         style={{
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
           minHeight: 56,
           paddingHorizontal: 16,
-          backgroundColor: '#000',
+          paddingVertical: 12,
         }}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       >
         <TouchableOpacity onPress={() => router.back()} style={{ paddingVertical: 8, paddingRight: 16 }}>
           <Text style={{ color: '#007AFF', fontSize: 16 }}>戻る</Text>
         </TouchableOpacity>
         <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>おもちゃタッチ</Text>
         <View style={{ width: 50 }} />
-      </View>
+      </LinearGradient>
     </SafeAreaView>
   );
 
@@ -171,10 +182,10 @@ export default function NFCReaderScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar 
         barStyle="light-content" 
-        backgroundColor="#000" 
+        backgroundColor={gradientStart} 
         translucent={modalVisible}
       />
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor }]}>
         <CustomHeader />
       
       <View style={styles.content}>

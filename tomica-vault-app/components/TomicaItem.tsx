@@ -2,6 +2,7 @@ import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { useThemeColor } from '../hooks/useThemeColor';
 import type { Situation } from '../utils/tomicaUtils';
+import Animated from 'react-native-reanimated';
 
 type Tomica = {
   id: number;
@@ -61,28 +62,38 @@ export function TomicaItem({ item, onPress }: TomicaItemProps) {
   };
 
   return (
-    <TouchableOpacity 
-      style={[styles.item, { borderBottomColor: borderColor }]}
-      onPress={handlePress}
-    >
-      <Text style={[styles.itemName, { color: textColor }]}>{item.name}</Text>
-      <View style={styles.situationContainer}>
-        <Text style={[
-          styles.situation,
-          getSituationStyle(item.situation as Situation)
-        ]}>
-          {item.situation}
-        </Text>
-      </View>
-      <Text style={[styles.updateInfo, { color: mutedColor }]}>
-        最終更新: {formatDate(item.lastUpdatedDate)}
+    <Animated.View sharedTransitionTag={`tomica-item-${item.id}`}>
+      <TouchableOpacity 
+        style={[styles.item, { borderBottomColor: borderColor }]}
+        onPress={handlePress}
+      >
+        <Animated.Text 
+          style={[styles.itemName, { color: textColor }]}
+          sharedTransitionTag={`tomica-name-${item.id}`}
+        >
+          {item.name}
+        </Animated.Text>
+        <View style={styles.situationContainer}>
+          <Animated.Text 
+            style={[
+              styles.situation,
+              getSituationStyle(item.situation as Situation)
+            ]}
+            sharedTransitionTag={`tomica-situation-${item.id}`}
+          >
+            {item.situation}
+          </Animated.Text>
+        </View>
+        <Text style={[styles.updateInfo, { color: mutedColor }]}>
+          最終更新: {formatDate(item.lastUpdatedDate)}
       </Text>
       {item.updatedBy && (
         <Text style={[styles.updateInfo, { color: mutedColor }]}>
           更新者: {item.updatedBy}
         </Text>
       )}
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </Animated.View>
   );
 }
 
