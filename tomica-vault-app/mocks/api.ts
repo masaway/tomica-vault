@@ -10,7 +10,7 @@ export const getTomicas = async (): Promise<Tomica[]> => {
 
 export const getTomicaById = async (id: string): Promise<Tomica | undefined> => {
   await new Promise(resolve => setTimeout(resolve, 300));
-  return mockTomicas.find(tomica => tomica.id === id);
+  return mockTomicas.find(tomica => tomica.id.toString() === id);
 };
 
 export const getTomicaByNfcId = async (nfcTagUid: string): Promise<Tomica | undefined> => {

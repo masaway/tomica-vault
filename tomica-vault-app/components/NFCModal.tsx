@@ -215,7 +215,7 @@ export default function NFCModal({
                 onPress={() => {
                   onClose();
                   const params = scannedNfcTagId ? `?nfcTagId=${scannedNfcTagId}` : '';
-                  router.push(`/add${params}`);
+                  router.push(`/(tabs)/add${params}` as any);
                 }}
               >
                 <Ionicons name="add" size={20} color="#fff" />
