@@ -10,7 +10,7 @@ export const useNFCEnvironment = () => {
     
     // Development Build、Standalone、またはプレビュービルドでは実際のNFC機能を使用
     const isNFCAvailable = envInfo.isDevelopmentBuild || 
-                          envInfo.appOwnership === 'standalone' ||
+                          (envInfo.appOwnership as string) === 'standalone' ||
                           envInfo.buildType === 'Preview Build';
     
     return {

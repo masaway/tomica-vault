@@ -515,14 +515,14 @@ const useNFCReal = () => {
       
       // 高速化：使用頻度の高い順でフォールバック（最適化された優先順位）
       const fallbackTechs = [
-        { tech: NfcTech.NfcA, name: 'NfcA' },                   // 最高優先度
-        { tech: NfcTech.MifareUltralight, name: 'MifareUltralight' }, // 一般的
-        { tech: NfcTech.Ndef, name: 'Ndef' },                   // NDEF対応
-        { tech: NfcTech.MifareClassic, name: 'MifareClassic' },  // 交通系
-        { tech: NfcTech.IsoDep, name: 'IsoDep' },               // ISO準拠
-        { tech: NfcTech.NfcV, name: 'NfcV' },                   // 長距離タグ
-        { tech: NfcTech.NfcF, name: 'NfcF' },                   // FeliCa
-        { tech: NfcTech.NdefFormatable, name: 'NdefFormatable' } // 最後の手段
+        { tech: 'NfcA', name: 'NfcA' },                   // 最高優先度
+        { tech: 'MifareUltralight', name: 'MifareUltralight' }, // 一般的
+        { tech: 'Ndef', name: 'Ndef' },                   // NDEF対応
+        { tech: 'MifareClassic', name: 'MifareClassic' },  // 交通系
+        { tech: 'IsoDep', name: 'IsoDep' },               // ISO準拠
+        { tech: 'NfcV', name: 'NfcV' },                   // 長距離タグ
+        { tech: 'NfcF', name: 'NfcF' },                   // FeliCa
+        { tech: 'NdefFormatable', name: 'NdefFormatable' } // 最後の手段
       ];
       
       for (const { tech, name } of fallbackTechs) {
@@ -592,7 +592,7 @@ const useNFCReal = () => {
             return result;
           }
         } catch (techError) {
-          console.log(`${name}での読み取り失敗:`, techError.message);
+          console.log(`${name}での読み取り失敗:`, (techError as Error).message);
           // 次のテクノロジーを試行
           continue;
         } finally {

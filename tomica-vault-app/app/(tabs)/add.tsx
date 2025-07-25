@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput, ScrollView, Pressable, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, Pressable, Alert } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { useThemeColor } from '../../hooks/useThemeColor';
@@ -21,8 +21,8 @@ export default function AddScreen() {
 
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
-  const borderColor = useThemeColor({}, 'border');
-  const cardColor = useThemeColor({}, 'card');
+  const borderColor = useThemeColor({}, 'tabIconDefault');
+  const cardColor = useThemeColor({}, 'cardBackground');
   const tintColor = useThemeColor({}, 'tint');
 
   // URLパラメータからNFCタグIDを取得

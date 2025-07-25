@@ -8,7 +8,7 @@ import { router } from 'expo-router';
 export default function SettingsScreen() {
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
-  const borderColor = useThemeColor({}, 'border');
+  const borderColor = useThemeColor({}, 'tabIconDefault');
   const { user, signOut, getAuthProvider, hasPassword } = useAuth();
   const { audioState, setEnabled, playSuccessSound } = useAudio();
   

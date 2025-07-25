@@ -18,8 +18,8 @@ export default function ChangePasswordScreen() {
   const isPasswordSetup = authProvider === 'google' && !userHasPassword;
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
-  const borderColor = useThemeColor({}, 'border');
-  const cardColor = useThemeColor({}, 'card');
+  const borderColor = useThemeColor({}, 'tabIconDefault');
+  const cardColor = useThemeColor({}, 'cardBackground');
   const tintColor = useThemeColor({}, 'tint');
   const gradientStart = useThemeColor({}, 'gradientStart');
   const gradientEnd = useThemeColor({}, 'gradientEnd');

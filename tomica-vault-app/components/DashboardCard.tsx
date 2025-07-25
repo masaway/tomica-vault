@@ -7,7 +7,7 @@ interface DashboardCardProps {
   title: string;
   value: string | number;
   icon: keyof typeof Ionicons.glyphMap;
-  gradientColors: string[];
+  gradientColors: readonly [string, string, ...string[]];
   onPress?: () => void;
   subtitle?: string;
   delay?: number;

@@ -7,10 +7,10 @@ import { Platform } from 'react-native';
 export interface Profile {
   id: string;
   display_name: string;
-  avatar_url?: string;
-  birth_date?: string;
-  created_at: string;
-  updated_at: string;
+  avatar_url: string | null;
+  birth_date: string | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 interface AuthState {
@@ -242,14 +242,14 @@ export const useAuth = () => {
         const result = await Promise.race([webBrowserPromise, timeoutPromise]) as WebBrowser.WebBrowserResult;
         console.log('WebBrowser完了');
         console.log('WebBrowser結果タイプ:', result.type);
-        console.log('WebBrowser結果URL:', result.url);
         console.log('WebBrowser結果詳細:', JSON.stringify(result, null, 2));
 
-        if (result.type === 'success' && result.url) {
-          console.log('認証成功 URL:', result.url);
+        if ((result as any).type === 'success') {
+          const successResult = result as any; // WebBrowserの型定義の問題を回避
+          console.log('認証成功 URL:', successResult.url);
           
           // Supabaseのハッシュベースのトークン処理
-          const url = result.url;
+          const url = successResult.url;
           let accessToken: string | null = null;
           let refreshToken: string | null = null;
 

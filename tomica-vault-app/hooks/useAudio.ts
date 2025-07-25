@@ -204,8 +204,8 @@ export const useAudio = (): UseAudioResult => {
       // 音声ファイルの状態も確認
       if (hasSoundRef) {
         try {
-          const soundStatus = await soundRef.current.getStatusAsync();
-          if (soundStatus.isLoaded && currentAudioState.isEnabled) {
+          const soundStatus = await soundRef.current?.getStatusAsync();
+          if (soundStatus?.isLoaded && currentAudioState.isEnabled) {
             return true;
           }
         } catch (e) {
