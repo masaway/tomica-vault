@@ -4,13 +4,13 @@ import { useAuth } from '../../hooks/useAuth';
 import { useAudio } from '../../hooks/useAudio';
 import { FontAwesome } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function SettingsScreen() {
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const borderColor = useThemeColor({}, 'tint');
-  const { user, profile, signOut, getAuthProvider, hasPassword, updateUserProfile } = useAuth();
+  const { user, profile, signOut, getAuthProvider, hasPassword, updateUserProfile, fetchProfile, setProfile } = useAuth();
   const { audioState, setEnabled, playSuccessSound } = useAudio();
   
   const authProvider = getAuthProvider();
@@ -20,6 +20,24 @@ export default function SettingsScreen() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState(profile?.display_name || '');
   const [savingName, setSavingName] = useState(false);
+
+  // 設定ページにアクセス時にプロファイルを取得
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (user?.id && !profile) {
+        try {
+          const fetchedProfile = await fetchProfile(user.id);
+          if (fetchedProfile) {
+            setProfile(fetchedProfile);
+          }
+        } catch (error) {
+          console.error('プロファイル取得エラー:', error);
+        }
+      }
+    };
+
+    loadProfile();
+  }, [user?.id, profile]);
 
   const handleEditName = () => {
     setEditName(profile?.display_name || '');
