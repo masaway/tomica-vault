@@ -1,20 +1,42 @@
-import { StyleSheet, View, Text, TouchableOpacity, Alert, ScrollView, Switch, Platform } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Alert, ScrollView, Switch, Platform, TextInput } from 'react-native';
 import { useThemeColor } from '../../hooks/useThemeColor';
 import { useAuth } from '../../hooks/useAuth';
 import { useAudio } from '../../hooks/useAudio';
 import { FontAwesome } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import React, { useState } from 'react';
 
 export default function SettingsScreen() {
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
-  const borderColor = useThemeColor({}, 'border');
-  const { user, signOut, getAuthProvider, hasPassword } = useAuth();
+  const borderColor = useThemeColor({}, 'tint');
+  const { user, profile, signOut, getAuthProvider, hasPassword, updateUserProfile } = useAuth();
   const { audioState, setEnabled, playSuccessSound } = useAudio();
   
   const authProvider = getAuthProvider();
   const userHasPassword = hasPassword();
   const isPasswordSetup = authProvider === 'google' && !userHasPassword;
+
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editName, setEditName] = useState(profile?.display_name || '');
+  const [savingName, setSavingName] = useState(false);
+
+  const handleEditName = () => {
+    setEditName(profile?.display_name || '');
+    setIsEditingName(true);
+  };
+
+  const handleSaveName = async () => {
+    setSavingName(true);
+    try {
+      await updateUserProfile({ display_name: editName });
+      setIsEditingName(false);
+    } catch (e) {
+      alert('保存に失敗しました');
+    } finally {
+      setSavingName(false);
+    }
+  };
 
   const handleLogout = async () => {
     Alert.alert(
@@ -83,11 +105,34 @@ export default function SettingsScreen() {
           <View style={[styles.userInfo, { borderBottomColor: borderColor }]}>
             <FontAwesome name="user-circle" size={24} color={textColor} />
             <View style={styles.userDetails}>
-              <Text style={[styles.userEmail, { color: textColor }]}>
-                {user?.email || 'ゲストユーザー'}
+              <Text style={[styles.userEmail, { color: textColor }]}>  
+                {isEditingName ? (
+                  <>
+                    <TextInput
+                      value={editName}
+                      onChangeText={setEditName}
+                      style={{ color: textColor, borderBottomWidth: 1, borderColor: borderColor, minWidth: 120 }}
+                      editable={!savingName}
+                      autoFocus
+                    />
+                    <TouchableOpacity onPress={handleSaveName} disabled={savingName} style={{ marginLeft: 8 }}>
+                      <Text style={{ color: savingName ? '#aaa' : textColor }}>保存</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setIsEditingName(false)} disabled={savingName} style={{ marginLeft: 8 }}>
+                      <Text style={{ color: '#aaa' }}>キャンセル</Text>
+                    </TouchableOpacity>
+                  </>
+                ) : (
+                  <>
+                    {profile?.display_name || 'ゲストユーザー'}
+                    <TouchableOpacity onPress={handleEditName} style={{ marginLeft: 8 }}>
+                      <FontAwesome name="edit" size={14} color={textColor} />
+                    </TouchableOpacity>
+                  </>
+                )}
               </Text>
-              <Text style={[styles.userSubtext, { color: textColor }]}>
-                ユーザーID: {user?.id?.slice(0, 8)}...
+              <Text style={[styles.userSubtext, { color: textColor }]}>  
+                メールアドレス: {user?.email || '未登録'}
               </Text>
               <Text style={[styles.authMethodText, { color: textColor }]}>
                 🔐 利用可能な認証方法: {authProvider === 'google' ? 'Google' : 'Email'}
