@@ -15,18 +15,36 @@ export const determineTomicaSituation = (tomica: Tomica): Situation => {
     return 'おやすみ';
   }
 
-  // まいご判定（scanned_atベース）- おやすみ状態でない場合のみ
+  // まいご判定 - おやすみ状態でない場合のみ
+  const now = Date.now();
+  
+  // チェックアウト状態で48時間経過した場合もまいご
+  if (checked_out_at && check_in_at) {
+    const checkedOutDate = new Date(checked_out_at).getTime();
+    const checkedInDate = new Date(check_in_at).getTime();
+    
+    // おでかけ中（checked_out_at > check_in_at）で48時間経過
+    if (checkedOutDate > checkedInDate && now - checkedOutDate >= 48 * 60 * 60 * 1000) {
+      return 'まいご';
+    }
+  } else if (checked_out_at && !check_in_at) {
+    // check_in_atがnullでchecked_out_atから48時間経過
+    const checkedOutDate = new Date(checked_out_at).getTime();
+    if (now - checkedOutDate >= 48 * 60 * 60 * 1000) {
+      return 'まいご';
+    }
+  }
+  
+  // スキャンベースの判定も維持
   if (scanned_at === null) {
     // 一度もスキャンされていない場合、作成から48時間経過したらまいご
     const createdDate = new Date(tomica.created_at).getTime();
-    const now = Date.now();
     if (now - createdDate >= 48 * 60 * 60 * 1000) {
       return 'まいご';
     }
   } else {
     // スキャンから48時間経過したらまいご
     const scannedDate = new Date(scanned_at).getTime();
-    const now = Date.now();
     if (now - scannedDate >= 48 * 60 * 60 * 1000) {
       return 'まいご';
     }
