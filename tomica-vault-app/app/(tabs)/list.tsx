@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, FlatList, TouchableOpacity, ScrollView, TextInput } from 'react-native';
+import { StyleSheet, View, Text, FlatList, TouchableOpacity, ScrollView, TextInput, Modal, Pressable } from 'react-native';
 import { useEffect, useState } from 'react';
 import { NFCShortcut } from '../../components/NFCShortcut';
 import { useTomica, Tomica } from '@/hooks/useTomica';
@@ -18,6 +18,8 @@ export default function ListScreen() {
   const [filter, setFilter] = useState<'all' | 'おうち' | 'おでかけ' | 'まいご' | 'おやすみ'>('all');
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState(query);
+  const [sortOrder, setSortOrder] = useState<'name_asc' | 'name_desc' | 'updated_asc' | 'updated_desc'>('name_asc');
+  const [sortModalVisible, setSortModalVisible] = useState(false);
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const borderColor = useThemeColor({}, 'icon');
@@ -79,6 +81,34 @@ export default function ListScreen() {
     return determineTomicaSituation(item) === filter;
   });
 
+  // 並び順に応じたソート関数
+  const getSortedList = () => {
+    const filtered = tomicaList.filter(item => {
+      if (filter === 'all') return true;
+      return determineTomicaSituation(item) === filter;
+    });
+    switch (sortOrder) {
+      case 'name_asc':
+        return filtered.slice().sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+      case 'name_desc':
+        return filtered.slice().sort((a, b) => b.name.localeCompare(a.name, 'ja'));
+      case 'updated_asc':
+        return filtered.slice().sort((a, b) => {
+          if (!a.updated_at) return 1;
+          if (!b.updated_at) return -1;
+          return new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
+        });
+      case 'updated_desc':
+        return filtered.slice().sort((a, b) => {
+          if (!a.updated_at) return 1;
+          if (!b.updated_at) return -1;
+          return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+        });
+      default:
+        return filtered;
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor }]}>
       {/* 検索バーの高さ分スペース（半分の28pxに変更） */}
@@ -96,6 +126,40 @@ export default function ListScreen() {
           placeholderTextColor={borderColor}
         />
       </View>
+      {/* 並び替えボタン */}
+      <View style={{ alignItems: 'flex-end', paddingHorizontal: 16, marginTop: 4 }}>
+        <TouchableOpacity
+          style={{ backgroundColor: cardColor, paddingVertical: 6, paddingHorizontal: 16, borderRadius: 16, borderWidth: 1, borderColor: borderColor }}
+          onPress={() => setSortModalVisible(true)}
+        >
+          <Text style={{ color: textColor, fontWeight: 'bold', fontSize: 14 }}>並び替え</Text>
+        </TouchableOpacity>
+      </View>
+      {/* 並び替えモーダル */}
+      <Modal
+        visible={sortModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSortModalVisible(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setSortModalVisible(false)}>
+          <View style={styles.modalContent}>
+            <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 12 }}>並び替え</Text>
+            <TouchableOpacity style={styles.sortOption} onPress={() => { setSortOrder('name_asc'); setSortModalVisible(false); }}>
+              <Text style={sortOrder === 'name_asc' ? styles.selectedSort : styles.sortText}>名前昇順</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.sortOption} onPress={() => { setSortOrder('name_desc'); setSortModalVisible(false); }}>
+              <Text style={sortOrder === 'name_desc' ? styles.selectedSort : styles.sortText}>名前降順</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.sortOption} onPress={() => { setSortOrder('updated_asc'); setSortModalVisible(false); }}>
+              <Text style={sortOrder === 'updated_asc' ? styles.selectedSort : styles.sortText}>最終更新日昇順</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.sortOption} onPress={() => { setSortOrder('updated_desc'); setSortModalVisible(false); }}>
+              <Text style={sortOrder === 'updated_desc' ? styles.selectedSort : styles.sortText}>最終更新日降順</Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
       {/* フィルタカード */}
       <View style={styles.filterRow}>
         {['all', 'おうち', 'おでかけ', 'まいご', 'おやすみ'].map((key) => (
@@ -127,14 +191,7 @@ export default function ListScreen() {
         </View>
       ) : (
         <FlatList
-          data={tomicaList.filter(item => {
-            if (filter === 'all') return true;
-            return determineTomicaSituation(item) === filter;
-          }).sort((a, b) => {
-            const situationA = determineTomicaSituation(a);
-            const situationB = determineTomicaSituation(b);
-            return situationOrder[situationA] - situationOrder[situationB];
-          })}
+          data={getSortedList()}
           renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.list}
@@ -204,5 +261,34 @@ const styles = StyleSheet.create({
   },
   filterCardTextActive: {
     color: '#fff',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 24,
+    minWidth: 220,
+    alignItems: 'stretch',
+    elevation: 4,
+  },
+  sortOption: {
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  sortText: {
+    fontSize: 15,
+    color: '#333',
+  },
+  selectedSort: {
+    fontSize: 15,
+    color: '#1976D2',
+    fontWeight: 'bold',
   },
 }); 
