@@ -21,7 +21,7 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <ThemeProvider value={DefaultTheme}>
         <Stack screenOptions={{
           // デフォルトのスタック遷移アニメーション設定
           gestureEnabled: true,

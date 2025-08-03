@@ -9,7 +9,7 @@ import React, { useState, useEffect } from 'react';
 export default function SettingsScreen() {
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
-  const borderColor = useThemeColor({}, 'tint');
+  const borderColor = useThemeColor({}, 'tabIconDefault');
   const { user, profile, signOut, getAuthProvider, hasPassword, updateUserProfile, fetchProfile, setProfile } = useAuth();
   const { audioState, setEnabled, playSuccessSound } = useAudio();
   
