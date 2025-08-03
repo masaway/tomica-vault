@@ -67,23 +67,18 @@ export const useAuth = () => {
     
     // 同じユーザーIDの場合は更新をスキップ（無限ループ防止）
     if (newUserId === currentUserId && !authState.loading) {
-      console.log('updateAuthState - 同じ状態のためスキップ:', newUserId);
       return;
     }
     
-    console.log('updateAuthState - 状態更新開始:', newUserId);
-    
     try {
       if (session?.user) {
-        // プロファイル取得を一時的にスキップ（問題の切り分けのため）
+        // プロファイル取得は設定ページで実行するため、ここではスキップ
         setAuthState({
           user: session.user,
           session,
-          profile: null, // 一時的にnullに設定
+          profile: null,
           loading: false,
         });
-        
-        console.log('updateAuthState - 認証状態設定完了');
       } else {
         setAuthState({
           user: null,
@@ -91,7 +86,6 @@ export const useAuth = () => {
           profile: null,
           loading: false,
         });
-        console.log('updateAuthState - 認証状態クリア完了');
       }
     } catch (error) {
       console.error('updateAuthState - エラー発生:', error);
@@ -471,6 +465,14 @@ export const useAuth = () => {
     return getAuthProvider() === 'email';
   };
 
+  // プロファイルを手動で設定する関数
+  const setProfile = (profile: Profile | null) => {
+    setAuthState(prev => ({
+      ...prev,
+      profile,
+    }));
+  };
+
   return {
     // 状態
     user: authState.user,
@@ -489,6 +491,7 @@ export const useAuth = () => {
     updateProfile: updateAuthProfile,
     updateUserProfile,
     fetchProfile,
+    setProfile,
     
     // 認証方法判定関数
     getAuthProvider,
