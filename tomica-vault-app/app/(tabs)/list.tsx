@@ -1,7 +1,7 @@
 import { StyleSheet, View, Text, FlatList, TouchableOpacity, ScrollView, TextInput, Modal, Pressable } from 'react-native';
 import { useEffect, useState } from 'react';
 import { NFCShortcut } from '../../components/NFCShortcut';
-import { useTomica, Tomica } from '@/hooks/useTomica';
+import { useTomica, Tomica, SortOrder } from '@/hooks/useTomica';
 import { useAuth } from '@/hooks/useAuth';
 import { TomicaItem } from '../../components/TomicaItem';
 import { useThemeColor } from '../../hooks/useThemeColor';
@@ -13,12 +13,11 @@ import React from 'react';
 
 export default function ListScreen() {
   const { user, loading: authLoading } = useAuth();
-  const { tomicaList, loading, error, fetchTomicaList, searchTomica } = useTomica();
+  const { tomicaList, loading, error, fetchTomicaList, searchTomica, sortOrder, changeSortOrder } = useTomica();
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<'all' | 'おうち' | 'おでかけ' | 'まいご' | 'おやすみ'>('all');
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState(query);
-  const [sortOrder, setSortOrder] = useState<'name_asc' | 'name_desc' | 'updated_asc' | 'updated_desc'>('name_asc');
   const [sortModalVisible, setSortModalVisible] = useState(false);
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
@@ -46,7 +45,7 @@ export default function ListScreen() {
     } else {
       fetchTomicaList();
     }
-  }, [debouncedQuery]);
+  }, [debouncedQuery, fetchTomicaList, searchTomica]);
 
   // 画面フォーカス時に最新リスト取得
   useFocusEffect(
@@ -81,32 +80,12 @@ export default function ListScreen() {
     return determineTomicaSituation(item) === filter;
   });
 
-  // 並び順に応じたソート関数
-  const getSortedList = () => {
-    const filtered = tomicaList.filter(item => {
-      if (filter === 'all') return true;
-      return determineTomicaSituation(item) === filter;
-    });
-    switch (sortOrder) {
-      case 'name_asc':
-        return filtered.slice().sort((a, b) => a.name.localeCompare(b.name, 'ja'));
-      case 'name_desc':
-        return filtered.slice().sort((a, b) => b.name.localeCompare(a.name, 'ja'));
-      case 'updated_asc':
-        return filtered.slice().sort((a, b) => {
-          if (!a.updated_at) return 1;
-          if (!b.updated_at) return -1;
-          return new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
-        });
-      case 'updated_desc':
-        return filtered.slice().sort((a, b) => {
-          if (!a.updated_at) return 1;
-          if (!b.updated_at) return -1;
-          return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
-        });
-      default:
-        return filtered;
-    }
+  const getSortLabel = (order: SortOrder) => {
+    if (order.column === 'name' && order.ascending) return '名前 昇順';
+    if (order.column === 'name' && !order.ascending) return '名前 降順';
+    if (order.column === 'updated_at' && order.ascending) return '更新日時 昇順';
+    if (order.column === 'updated_at' && !order.ascending) return '更新日時 降順';
+    return '並び替え';
   };
 
   return (
@@ -127,12 +106,13 @@ export default function ListScreen() {
         />
       </View>
       {/* 並び替えボタン */}
-      <View style={{ alignItems: 'flex-end', paddingHorizontal: 16, marginTop: 4 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', paddingHorizontal: 16, marginTop: 4 }}>
+        <Text style={{ color: textColor, marginRight: 8 }}>{getSortLabel(sortOrder)}</Text>
         <TouchableOpacity
           style={{ backgroundColor: cardColor, paddingVertical: 6, paddingHorizontal: 16, borderRadius: 16, borderWidth: 1, borderColor: borderColor }}
           onPress={() => setSortModalVisible(true)}
         >
-          <Text style={{ color: textColor, fontWeight: 'bold', fontSize: 14 }}>並び替え</Text>
+          <Text style={{ color: textColor, fontWeight: 'bold', fontSize: 14 }}>変更</Text>
         </TouchableOpacity>
       </View>
       {/* 並び替えモーダル */}
@@ -145,17 +125,17 @@ export default function ListScreen() {
         <Pressable style={styles.modalOverlay} onPress={() => setSortModalVisible(false)}>
           <View style={styles.modalContent}>
             <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 12 }}>並び替え</Text>
-            <TouchableOpacity style={styles.sortOption} onPress={() => { setSortOrder('name_asc'); setSortModalVisible(false); }}>
-              <Text style={sortOrder === 'name_asc' ? styles.selectedSort : styles.sortText}>名前昇順</Text>
+            <TouchableOpacity style={styles.sortOption} onPress={() => { changeSortOrder({ column: 'name', ascending: true }); setSortModalVisible(false); }}>
+              <Text style={sortOrder.column === 'name' && sortOrder.ascending ? styles.selectedSort : styles.sortText}>名前 昇順</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.sortOption} onPress={() => { setSortOrder('name_desc'); setSortModalVisible(false); }}>
-              <Text style={sortOrder === 'name_desc' ? styles.selectedSort : styles.sortText}>名前降順</Text>
+            <TouchableOpacity style={styles.sortOption} onPress={() => { changeSortOrder({ column: 'name', ascending: false }); setSortModalVisible(false); }}>
+              <Text style={sortOrder.column === 'name' && !sortOrder.ascending ? styles.selectedSort : styles.sortText}>名前 降順</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.sortOption} onPress={() => { setSortOrder('updated_asc'); setSortModalVisible(false); }}>
-              <Text style={sortOrder === 'updated_asc' ? styles.selectedSort : styles.sortText}>最終更新日昇順</Text>
+            <TouchableOpacity style={styles.sortOption} onPress={() => { changeSortOrder({ column: 'updated_at', ascending: true }); setSortModalVisible(false); }}>
+              <Text style={sortOrder.column === 'updated_at' && sortOrder.ascending ? styles.selectedSort : styles.sortText}>更新日時 昇順</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.sortOption} onPress={() => { setSortOrder('updated_desc'); setSortModalVisible(false); }}>
-              <Text style={sortOrder === 'updated_desc' ? styles.selectedSort : styles.sortText}>最終更新日降順</Text>
+            <TouchableOpacity style={styles.sortOption} onPress={() => { changeSortOrder({ column: 'updated_at', ascending: false }); setSortModalVisible(false); }}>
+              <Text style={sortOrder.column === 'updated_at' && !sortOrder.ascending ? styles.selectedSort : styles.sortText}>更新日時 降順</Text>
             </TouchableOpacity>
           </View>
         </Pressable>
@@ -191,7 +171,7 @@ export default function ListScreen() {
         </View>
       ) : (
         <FlatList
-          data={getSortedList()}
+          data={filteredList}
           renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.list}
@@ -291,4 +271,4 @@ const styles = StyleSheet.create({
     color: '#1976D2',
     fontWeight: 'bold',
   },
-}); 
+});

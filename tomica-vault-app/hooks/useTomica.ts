@@ -19,12 +19,18 @@ export interface TomicaStats {
   }[];
 }
 
+export type SortOrder = {
+  column: keyof Tomica;
+  ascending: boolean;
+};
+
 export function useTomica() {
   const { user, loading: authLoading } = useAuth();
   const [tomicaList, setTomicaList] = useState<Tomica[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<TomicaStats | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder>({ column: 'name', ascending: true });
 
   // 共通のエラーハンドリング
   const handleError = (err: unknown) => {
@@ -48,6 +54,11 @@ export function useTomica() {
   const isSchemaUpdated = () => {
     return true; // フェーズ1のマイグレーション完了
   };
+
+  // 並び順を変更する関数
+  const changeSortOrder = useCallback((newSortOrder: SortOrder) => {
+    setSortOrder(newSortOrder);
+  }, []);
 
   // おもちゃ一覧を取得
   const fetchTomicaList = useCallback(async () => {
@@ -91,7 +102,7 @@ export function useTomica() {
         .select('*')
         .in('id', tomicaIds)
         .is('deleted_at', null)
-        .order('name', { ascending: true });
+        .order(sortOrder.column, { ascending: sortOrder.ascending });
       
       if (error) {
         console.error('おもちゃ取得エラー:', error);
@@ -106,7 +117,7 @@ export function useTomica() {
     } finally {
       setLoading(false);
     }
-  }, [user, authLoading]);
+  }, [user, authLoading, sortOrder]);
 
   // おもちゃを検索
   const searchTomica = useCallback(async (query: string) => {
@@ -137,7 +148,7 @@ export function useTomica() {
         .in('id', tomicaIds)
         .ilike('name', `%${query}%`)
         .is('deleted_at', null)
-        .order('name', { ascending: true });
+        .order(sortOrder.column, { ascending: sortOrder.ascending });
       
       if (error) throw error;
       setTomicaList(data || []);
@@ -146,7 +157,7 @@ export function useTomica() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, sortOrder]);
 
   // おもちゃの詳細を取得
   const getTomicaById = useCallback(async (id: number) => {
@@ -717,6 +728,7 @@ export function useTomica() {
     loading,
     error,
     stats,
+    sortOrder,
     fetchTomicaList,
     searchTomica,
     getTomicaById,
@@ -729,5 +741,6 @@ export function useTomica() {
     updateTomicaNfcTag,
     toggleSleepMode,
     deleteTomica,
+    changeSortOrder,
   };
-} 
+}
