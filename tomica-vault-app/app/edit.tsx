@@ -170,129 +170,137 @@ export default function EditScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar barStyle="light-content" backgroundColor={gradientStart} />
-      <SafeAreaView style={[styles.container, { backgroundColor }]} edges={['top', 'left', 'right', 'bottom']}>
-        {/* カスタムヘッダー */}
+      <View style={styles.container}>
+        {/* Header with gradient */}
         <LinearGradient
           colors={[gradientStart, tintColor, gradientEnd]}
           style={styles.headerGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Text style={styles.backButtonText}>キャンセル</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>おもちゃ編集</Text>
-          <View style={styles.headerSpacer} />
+          <SafeAreaView edges={['top', 'left', 'right']} style={styles.headerSafeArea}>
+            <View style={styles.headerContent}>
+              <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                <Text style={styles.backButtonText}>キャンセル</Text>
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>おもちゃ編集</Text>
+              <View style={styles.headerSpacer} />
+            </View>
+          </SafeAreaView>
         </LinearGradient>
-        <ScrollView style={styles.content}>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>基本情報</Text>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>名前</Text>
+        
+        {/* Main content area */}
+        <SafeAreaView style={[styles.contentArea, { backgroundColor }]} edges={['left', 'right', 'bottom']}>
+          <ScrollView style={styles.content}>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>基本情報</Text>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>名前</Text>
+                <TextInput
+                  style={styles.input}
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="おもちゃの名前"
+                  editable={!isLoading}
+                />
+              </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>状況</Text>
+                <View style={styles.situationButtons}>
+                  {([
+                    { value: '外出中', label: '行ってきます' },
+                    { value: '帰宅中', label: 'ただいま' }
+                  ] as const).map(({ value, label }) => (
+                    <TouchableOpacity
+                      key={value}
+                      style={[
+                        styles.situationButton,
+                        situation === value && styles.situationButtonActive,
+                      ]}
+                      onPress={() => setSituation(value)}
+                      disabled={isLoading}
+                    >
+                      <Text
+                        style={[
+                          styles.situationButtonText,
+                          situation === value && styles.situationButtonTextActive,
+                        ]}
+                      >
+                        {label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>メモ</Text>
               <TextInput
-                style={styles.input}
-                value={name}
-                onChangeText={setName}
-                placeholder="おもちゃの名前"
+                style={styles.notesInput}
+                value={notes}
+                onChangeText={setNotes}
+                placeholder="メモを入力"
+                multiline
+                numberOfLines={4}
                 editable={!isLoading}
               />
-            </View>
+              
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>状況</Text>
-              <View style={styles.situationButtons}>
-                {([
-                  { value: '外出中', label: '行ってきます' },
-                  { value: '帰宅中', label: 'ただいま' }
-                ] as const).map(({ value, label }) => (
-                  <TouchableOpacity
-                    key={value}
-                    style={[
-                      styles.situationButton,
-                      situation === value && styles.situationButtonActive,
-                    ]}
-                    onPress={() => setSituation(value)}
-                    disabled={isLoading}
-                  >
-                    <Text
-                      style={[
-                        styles.situationButtonText,
-                        situation === value && styles.situationButtonTextActive,
-                      ]}
-                    >
-                      {label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+              <Text style={styles.label}>おやすみモード</Text>
+              <View style={styles.switchContainer}>
+                <Switch
+                  value={isSleeping}
+                  onValueChange={setIsSleeping}
+                  trackColor={{ false: '#767577', true: '#81b0ff' }}
+                  thumbColor={isSleeping ? '#f5dd4b' : '#f4f3f4'}
+                  disabled={isLoading}
+                />
+                <Text style={styles.switchLabel}>
+                  {isSleeping ? 'おやすみ中' : '通常モード'}
+                </Text>
               </View>
             </View>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>メモ</Text>
-            <TextInput
-              style={styles.notesInput}
-              value={notes}
-              onChangeText={setNotes}
-              placeholder="メモを入力"
-              multiline
-              numberOfLines={4}
-              editable={!isLoading}
-            />
-            
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>おやすみモード</Text>
-            <View style={styles.switchContainer}>
-              <Switch
-                value={isSleeping}
-                onValueChange={setIsSleeping}
-                trackColor={{ false: '#767577', true: '#81b0ff' }}
-                thumbColor={isSleeping ? '#f5dd4b' : '#f4f3f4'}
-                disabled={isLoading}
-              />
-              <Text style={styles.switchLabel}>
-                {isSleeping ? 'おやすみ中' : '通常モード'}
+            <Text style={styles.sectionTitle}>NFCタグ</Text>
+            <View style={styles.nfcSection}>
+              <Text style={styles.nfcInfo}>
+                現在のNFCタグID: {tomica.nfc_tag_uid || '未登録'}
               </Text>
+              <TouchableOpacity 
+                style={[styles.nfcReregisterButton, isNfcReregistering && styles.nfcReregisterButtonDisabled]} 
+                onPress={handleNfcReregister}
+                disabled={isLoading || isNfcReregistering}
+              >
+                <Text style={styles.nfcReregisterButtonText}>
+                  {isNfcReregistering ? 'NFCタグ読み取り中...' : 'NFCタグを再登録'}
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>NFCタグ</Text>
-          <View style={styles.nfcSection}>
-            <Text style={styles.nfcInfo}>
-              現在のNFCタグID: {tomica.nfc_tag_uid || '未登録'}
+        </ScrollView>
+        <View style={styles.bottomButtonContainer}>
+          <TouchableOpacity 
+            style={[styles.bottomButton, styles.cancelButton]} 
+            onPress={() => router.back()}
+            disabled={isLoading}
+          >
+            <Text style={styles.bottomButtonText}>キャンセル</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.bottomButton, styles.saveButton]} 
+            onPress={handleSave}
+            disabled={isLoading}
+          >
+            <Text style={styles.bottomButtonText}>
+              {isLoading ? '保存中...' : '保存'}
             </Text>
-            <TouchableOpacity 
-              style={[styles.nfcReregisterButton, isNfcReregistering && styles.nfcReregisterButtonDisabled]} 
-              onPress={handleNfcReregister}
-              disabled={isLoading || isNfcReregistering}
-            >
-              <Text style={styles.nfcReregisterButtonText}>
-                {isNfcReregistering ? 'NFCタグ読み取り中...' : 'NFCタグを再登録'}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         </View>
-      </ScrollView>
-      <View style={styles.bottomButtonContainer}>
-        <TouchableOpacity 
-          style={[styles.bottomButton, styles.cancelButton]} 
-          onPress={() => router.back()}
-          disabled={isLoading}
-        >
-          <Text style={styles.bottomButtonText}>キャンセル</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.bottomButton, styles.saveButton]} 
-          onPress={handleSave}
-          disabled={isLoading}
-        >
-          <Text style={styles.bottomButtonText}>
-            {isLoading ? '保存中...' : '保存'}
-          </Text>
-        </TouchableOpacity>
+        </SafeAreaView>
       </View>
-      </SafeAreaView>
     </>
   );
 }
@@ -300,15 +308,23 @@ export default function EditScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   headerGradient: {
+    // No specific styles here, its height will be determined by its child (SafeAreaView)
+  },
+  headerSafeArea: {
+    backgroundColor: 'transparent',
+  },
+  headerContent: {
     paddingHorizontal: 16,
     paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     minHeight: 56,
+  },
+  contentArea: {
+    flex: 1,
   },
   backButton: {
     paddingVertical: 8,

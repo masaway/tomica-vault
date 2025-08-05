@@ -44,47 +44,55 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor }]} edges={['top', 'left', 'right', 'bottom']}>
+    <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={gradientStart} />
+      {/* Header with gradient */}
       <LinearGradient
         colors={[gradientStart, tintColor, gradientEnd]}
-        style={styles.header}
+        style={styles.headerGradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>戻る</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>プロフィール設定</Text>
-        <TouchableOpacity onPress={handleSave} disabled={isSaving} style={styles.saveButton}>
-          {isSaving ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Text style={styles.saveButtonText}>保存</Text>
-          )}
-        </TouchableOpacity>
+        <SafeAreaView edges={['top', 'left', 'right']} style={styles.headerSafeArea}>
+          <View style={styles.headerContent}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <Text style={styles.backButtonText}>戻る</Text>
+            </TouchableOpacity>
+            <Text style={styles.title}>プロフィール設定</Text>
+            <TouchableOpacity onPress={handleSave} disabled={isSaving} style={styles.saveButton}>
+              {isSaving ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.saveButtonText}>保存</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
       </LinearGradient>
 
-      <View style={styles.content}>
-        <View style={styles.avatarContainer}>
-          <Image 
-            source={avatarUrl ? { uri: avatarUrl } : require('../assets/images/icon.png')} 
-            style={styles.avatar}
-          />
-        </View>
+      {/* Main content area */}
+      <SafeAreaView style={[styles.contentArea, { backgroundColor }]} edges={['left', 'right', 'bottom']}>
+        <View style={styles.content}>
+          <View style={styles.avatarContainer}>
+            <Image 
+              source={avatarUrl ? { uri: avatarUrl } : require('../assets/images/icon.png')} 
+              style={styles.avatar}
+            />
+          </View>
 
-        <View style={styles.inputContainer}>
-          <Text style={[styles.label, { color: textColor }]}>表示名</Text>
-          <TextInput
-            style={[styles.input, { color: textColor, borderColor: borderColor }]}
-            value={displayName}
-            onChangeText={setDisplayName}
-            placeholder="表示名"
-            placeholderTextColor={textColor + '80'}
-          />
+          <View style={styles.inputContainer}>
+            <Text style={[styles.label, { color: textColor }]}>表示名</Text>
+            <TextInput
+              style={[styles.input, { color: textColor, borderColor: borderColor }]}
+              value={displayName}
+              onChangeText={setDisplayName}
+              placeholder="表示名"
+              placeholderTextColor={textColor + '80'}
+            />
+          </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
@@ -92,13 +100,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
+  headerGradient: {
+    // No specific styles here, its height will be determined by its child (SafeAreaView)
+  },
+  headerSafeArea: {
+    backgroundColor: 'transparent',
+  },
+  headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
     minHeight: 56,
+  },
+  contentArea: {
+    flex: 1,
   },
   backButton: {
     paddingVertical: 8,
