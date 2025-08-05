@@ -1,60 +1,40 @@
-import { StyleSheet, View, Text, TouchableOpacity, Alert, ScrollView, Switch, Platform, TextInput } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Alert, ScrollView, Switch, Platform } from 'react-native';
 import { useThemeColor } from '../../hooks/useThemeColor';
 import { useAuth } from '../../hooks/useAuth';
 import { useAudio } from '../../hooks/useAudio';
 import { FontAwesome } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import React, { useState, useEffect } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import React, { useCallback } from 'react';
 
 export default function SettingsScreen() {
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const borderColor = useThemeColor({}, 'tabIconDefault');
-  const { user, profile, signOut, getAuthProvider, hasPassword, updateUserProfile, fetchProfile, setProfile } = useAuth();
+  const { user, profile, signOut, getAuthProvider, hasPassword, fetchProfile, setProfile } = useAuth();
   const { audioState, setEnabled, playSuccessSound } = useAudio();
   
   const authProvider = getAuthProvider();
   const userHasPassword = hasPassword();
   const isPasswordSetup = authProvider === 'google' && !userHasPassword;
 
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [editName, setEditName] = useState(profile?.display_name || '');
-  const [savingName, setSavingName] = useState(false);
-
-  // 設定ページにアクセス時にプロファイルを取得
-  useEffect(() => {
-    const loadProfile = async () => {
-      if (user?.id && !profile) {
-        try {
-          const fetchedProfile = await fetchProfile(user.id);
-          if (fetchedProfile) {
-            setProfile(fetchedProfile);
+  useFocusEffect(
+    useCallback(() => {
+      const loadProfile = async () => {
+        if (user?.id) {
+          try {
+            const fetchedProfile = await fetchProfile(user.id);
+            if (fetchedProfile) {
+              setProfile(fetchedProfile);
+            }
+          } catch (error) {
+            console.error('プロファイル取得エラー:', error);
           }
-        } catch (error) {
-          console.error('プロファイル取得エラー:', error);
         }
-      }
-    };
+      };
 
-    loadProfile();
-  }, [user?.id, profile]);
-
-  const handleEditName = () => {
-    setEditName(profile?.display_name || '');
-    setIsEditingName(true);
-  };
-
-  const handleSaveName = async () => {
-    setSavingName(true);
-    try {
-      await updateUserProfile({ display_name: editName });
-      setIsEditingName(false);
-    } catch (e) {
-      alert('保存に失敗しました');
-    } finally {
-      setSavingName(false);
-    }
-  };
+      loadProfile();
+    }, [user?.id])
+  );
 
   const handleLogout = async () => {
     Alert.alert(
@@ -81,8 +61,7 @@ export default function SettingsScreen() {
   };
 
   const handleProfileEdit = () => {
-    // TODO: プロフィール編集画面の実装
-    Alert.alert('準備中', 'プロフィール編集機能は準備中です');
+    router.push('/edit-profile');
   };
 
   const handlePasswordChange = () => {
@@ -107,8 +86,6 @@ export default function SettingsScreen() {
     }
   };
 
-
-
   return (
     <View style={[styles.container, { backgroundColor }]}>
       <View style={[styles.header, { borderBottomColor: borderColor }]}>
@@ -124,30 +101,7 @@ export default function SettingsScreen() {
             <FontAwesome name="user-circle" size={24} color={textColor} />
             <View style={styles.userDetails}>
               <Text style={[styles.userEmail, { color: textColor }]}>  
-                {isEditingName ? (
-                  <>
-                    <TextInput
-                      value={editName}
-                      onChangeText={setEditName}
-                      style={{ color: textColor, borderBottomWidth: 1, borderColor: borderColor, minWidth: 120 }}
-                      editable={!savingName}
-                      autoFocus
-                    />
-                    <TouchableOpacity onPress={handleSaveName} disabled={savingName} style={{ marginLeft: 8 }}>
-                      <Text style={{ color: savingName ? '#aaa' : textColor }}>保存</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setIsEditingName(false)} disabled={savingName} style={{ marginLeft: 8 }}>
-                      <Text style={{ color: '#aaa' }}>キャンセル</Text>
-                    </TouchableOpacity>
-                  </>
-                ) : (
-                  <>
-                    {profile?.display_name || 'ゲストユーザー'}
-                    <TouchableOpacity onPress={handleEditName} style={{ marginLeft: 8 }}>
-                      <FontAwesome name="edit" size={14} color={textColor} />
-                    </TouchableOpacity>
-                  </>
-                )}
+                {profile?.display_name || 'ゲストユーザー'}
               </Text>
               <Text style={[styles.userSubtext, { color: textColor }]}>  
                 メールアドレス: {user?.email || '未登録'}
@@ -160,7 +114,7 @@ export default function SettingsScreen() {
           </View>
 
           <TouchableOpacity 
-            style={[styles.settingItem, { borderBottomColor: borderColor }]}
+            style={[styles.settingItem, { borderBottomColor: borderColor }]} 
             onPress={handleProfileEdit}
           >
             <FontAwesome name="edit" size={16} color={textColor} style={styles.icon} />
@@ -169,7 +123,7 @@ export default function SettingsScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={[styles.settingItem, { borderBottomColor: borderColor }]}
+            style={[styles.settingItem, { borderBottomColor: borderColor }]} 
             onPress={handlePasswordChange}
           >
             <FontAwesome 
@@ -200,11 +154,8 @@ export default function SettingsScreen() {
             />
           </View>
 
-
-
-
           <TouchableOpacity 
-            style={[styles.settingItem, { borderBottomColor: borderColor }]}
+            style={[styles.settingItem, { borderBottomColor: borderColor }]} 
             onPress={handleAbout}
           >
             <FontAwesome name="info-circle" size={16} color={textColor} style={styles.icon} />
@@ -226,6 +177,8 @@ export default function SettingsScreen() {
       </ScrollView>
     </View>
   );
+
+
 }
 
 const styles = StyleSheet.create({
