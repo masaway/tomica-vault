@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, TouchableOpacity, Alert, TextInput, ActivityIndicator, StatusBar, Image } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Alert, TextInput, ActivityIndicator, StatusBar, Image, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeColor } from '../hooks/useThemeColor';
@@ -55,24 +55,16 @@ export default function EditProfileScreen() {
       >
         <SafeAreaView edges={['top', 'left', 'right']} style={styles.headerSafeArea}>
           <View style={styles.headerContent}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-              <Text style={styles.backButtonText}>戻る</Text>
-            </TouchableOpacity>
+            <View style={styles.headerLeftSpacer} />
             <Text style={styles.title}>プロフィール設定</Text>
-            <TouchableOpacity onPress={handleSave} disabled={isSaving} style={styles.saveButton}>
-              {isSaving ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={styles.saveButtonText}>保存</Text>
-              )}
-            </TouchableOpacity>
+            <View style={styles.headerSpacer} />
           </View>
         </SafeAreaView>
       </LinearGradient>
 
       {/* Main content area */}
       <SafeAreaView style={[styles.contentArea, { backgroundColor }]} edges={['left', 'right', 'bottom']}>
-        <View style={styles.content}>
+        <ScrollView style={styles.contentScroll}>
           <View style={styles.avatarContainer}>
             <Image 
               source={avatarUrl ? { uri: avatarUrl } : require('../assets/images/icon.png')} 
@@ -90,6 +82,24 @@ export default function EditProfileScreen() {
               placeholderTextColor={textColor + '80'}
             />
           </View>
+        </ScrollView>
+        <View style={styles.bottomButtonContainer}>
+          <TouchableOpacity 
+            style={[styles.bottomButton, styles.cancelButton]} 
+            onPress={() => router.back()}
+            disabled={isSaving}
+          >
+            <Text style={styles.bottomButtonText}>キャンセル</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.bottomButton, styles.saveButton]} 
+            onPress={handleSave}
+            disabled={isSaving}
+          >
+            <Text style={styles.bottomButtonText}>
+              {isSaving ? '保存中...' : '保存'}
+            </Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     </View>
@@ -114,31 +124,22 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     minHeight: 56,
   },
+  headerSpacer: {
+    width: 60,
+  },
+  headerLeftSpacer: {
+    width: 60,
+  },
   contentArea: {
     flex: 1,
-  },
-  backButton: {
-    paddingVertical: 8,
-    paddingRight: 16,
-  },
-  backButtonText: {
-    fontSize: 16,
-    color: '#fff',
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#fff',
   },
-  saveButton: {
-    padding: 8,
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  content: {
+  contentScroll: {
+    flexGrow: 1,
     padding: 24,
   },
   avatarContainer: {
@@ -151,6 +152,16 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     backgroundColor: '#ccc',
   },
+  displayNameText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 16,
+  },
+  displayNameText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 16,
+  },
   inputContainer: {
     marginBottom: 16,
   },
@@ -158,10 +169,37 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 8,
   },
-  input: {
+    input: {
     borderWidth: 1,
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
+  },
+  bottomButtonContainer: {
+    flexDirection: 'row',
+    padding: 16,
+    paddingBottom: 32,
+    gap: 12,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  bottomButton: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 8,
+  },
+  cancelButton: {
+    backgroundColor: '#6c757d',
+  },
+  saveButton: {
+    backgroundColor: '#007AFF',
+  },
+  bottomButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
