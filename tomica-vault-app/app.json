@@ -10,7 +10,29 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NFCReaderUsageDescription": "おもちゃとあそぶためにNFCをつかいます",
+        "com.apple.developer.nfc.readersession.felica.systemcodes": [
+          "8005",
+          "8008", 
+          "0003",
+          "fe00",
+          "90b7",
+          "927a",
+          "12FC",
+          "86a7"
+        ],
+        "com.apple.developer.nfc.readersession.iso7816.select-identifiers": [
+          "D2760000850100",
+          "D2760000850101",
+          "A0000000031010",
+          "A0000000041010", 
+          "A0000000032010",
+          "315449432E534159",
+          "A0000002471001"
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {

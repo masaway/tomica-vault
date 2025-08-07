@@ -43,9 +43,10 @@ const useNFCReal = () => {
   // 状態参照用のref
   const nfcStateRef = useRef(nfcState);
   
-  // 高速化のための重複リクエスト防止
+  // iOS特有の問題対応：重複リクエスト防止とセッション管理
   const lastScanTime = useRef<number>(0);
-  const SCAN_THROTTLE_MS = 500; // 500ms間隔での重複防止
+  const SCAN_THROTTLE_MS = Platform.OS === 'ios' ? 1000 : 500; // iOSではより長い間隔
+  const isSessionActive = useRef<boolean>(false); // セッション状態管理
   
   // パフォーマンス監視
   const scanPerformance = useRef({
@@ -101,8 +102,21 @@ const useNFCReal = () => {
         
         if (supported) {
           isInitialized = true;
+          
+          // iOS特有の問題対応：より詳細な初期化ログ
+          if (Platform.OS === 'ios') {
+            console.log('iOS NFC初期化成功 - Core NFC対応');
+            // iOS用の初期化後クリーンアップ
+            try {
+              await NfcManager.cancelTechnologyRequest();
+            } catch (e) {
+              // 初期化時のクリーンアップエラーは無視
+            }
+          } else {
+            console.log('Android NFC初期化成功 - 幅広いタグ対応モード');
+          }
+          
           setNfcState(prev => ({ ...prev, isSupported: true }));
-          console.log('NFC初期化成功 - 幅広いタグ対応モード');
         } else {
           setNfcState(prev => ({ 
             ...prev, 
@@ -178,8 +192,14 @@ const useNFCReal = () => {
       
       setNfcState(prev => ({ ...prev, isAutoScanning: true, error: null }));
       
-      // タグ検出イベントリスナーを設定（幅広いタグ対応）
+      // iOS特有の問題対応：タグ検出イベントリスナーを設定
       NfcManager.setEventListener(NfcEvents.DiscoverTag, async (tag: any) => {
+        // iOS特有の問題対応：重複処理防止
+        if (Platform.OS === 'ios' && isSessionActive.current) {
+          console.log('iOS: タグ検出時にセッション既に活性中、処理をスキップ');
+          return;
+        }
+        isSessionActive.current = true;
         // タグタイプの詳細分析
         const techTypes = tag.techTypes || [];
         const primaryTech = techTypes[0] || 'Unknown';
@@ -223,16 +243,25 @@ const useNFCReal = () => {
             // 音声再生エラーは無視
           }
         }
+        
+        // iOS特有の問題対応：処理完了後にセッション状態をリセット
+        if (Platform.OS === 'ios') {
+          isSessionActive.current = false;
+        }
       });
       
-      // セッションクローズイベントリスナーを設定
+      // iOS特有の問題対応：セッションクローズイベントリスナーを設定
       NfcManager.setEventListener(NfcEvents.SessionClosed, () => {
+        console.log(`${Platform.OS}: NFCセッションがクローズされました`);
+        isSessionActive.current = false;
         setNfcState(prev => ({ ...prev, isAutoScanning: false }));
       });
       
-      // エラーイベントリスナーを設定
+      // iOS特有の問題対応：状態変更イベントリスナーを設定
       NfcManager.setEventListener(NfcEvents.StateChanged, (state: any) => {
+        console.log(`${Platform.OS}: NFC状態変更:`, state);
         if (state === 'off') {
+          isSessionActive.current = false;
           setNfcState(prev => ({ 
             ...prev, 
             isAutoScanning: false,
@@ -258,15 +287,21 @@ const useNFCReal = () => {
     try {
       const { NfcManager, NfcEvents } = getCachedNfcManager();
       
-      // 全てのイベントリスナーを削除
+      // iOS特有の問題対応：全てのイベントリスナーを削除
       try {
         NfcManager.setEventListener(NfcEvents.DiscoverTag, null);
         NfcManager.setEventListener(NfcEvents.SessionClosed, null);
         NfcManager.setEventListener(NfcEvents.StateChanged, null);
         await NfcManager.unregisterTagEvent();
         await NfcManager.cancelTechnologyRequest();
+        
+        // iOS特有の問題対応：停止時の追加クリーンアップ
+        if (Platform.OS === 'ios') {
+          isSessionActive.current = false;
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
       } catch (e) {
-        // エラーは無視
+        // エラーは無視（クリーンアップ時）
       }
       
       // 状態をリセット
@@ -277,6 +312,11 @@ const useNFCReal = () => {
       }));
       
     } catch (error: any) {
+      // iOS特有の問題対応：エラー発生時のセッション状態リセット
+      if (Platform.OS === 'ios') {
+        isSessionActive.current = false;
+      }
+      
       // エラーが発生してもスキャン状態はリセット
       setNfcState(prev => ({ 
         ...prev, 
@@ -295,13 +335,20 @@ const useNFCReal = () => {
       return null;
     }
 
-    // 高速化：重複スキャン防止
+    // iOS特有の問題対応：重複スキャン防止とセッション状態確認
     const now = Date.now();
-    if (currentState.isScanning || (now - lastScanTime.current) < SCAN_THROTTLE_MS) {
-      console.log('スキャンスロットル中:', now - lastScanTime.current, 'ms');
+    if (currentState.isScanning || 
+        (now - lastScanTime.current) < SCAN_THROTTLE_MS || 
+        isSessionActive.current) {
+      console.log('スキャンスロットル中 / セッション活性中:', {
+        timeSinceLastScan: now - lastScanTime.current,
+        isSessionActive: isSessionActive.current,
+        platform: Platform.OS
+      });
       return null;
     }
     lastScanTime.current = now;
+    isSessionActive.current = true;
 
     setNfcState(prev => ({ ...prev, isScanning: true, error: null }));
     
@@ -312,12 +359,28 @@ const useNFCReal = () => {
     try {
       const { NfcManager, NfcTech } = getCachedNfcManager();
       
+      // iOS特有の問題対応：既存セッションのクリーンアップ
+      if (Platform.OS === 'ios') {
+        try {
+          await NfcManager.cancelTechnologyRequest();
+          // iOS用の追加待機時間
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } catch (e) {
+          // クリーンアップエラーは無視
+        }
+      }
+      
       // タイムアウト付きでスキャンを実行
       const result = await Promise.race([
         (async () => {
-          // 高速化：最も一般的なテクノロジーを優先順位で配置
-          await NfcManager.requestTechnology([
-            NfcTech.NfcA,            // 最も一般的（優先度最高）
+          // iOS特有の問題対応：プラットフォーム別のテクノロジー選択
+          const techArray = Platform.OS === 'ios' ? [
+            NfcTech.Ndef,            // iOSでは最初にNDEFを試す
+            NfcTech.NfcA,            // ISO14443-A（Core NFCで最も安定）
+            NfcTech.IsoDep,          // ISO14443-4（安定性重視）
+            NfcTech.NfcF,            // FeliCa（日本固有、iOS Core NFC対応）
+          ] : [
+            NfcTech.NfcA,            // Android：最も一般的（優先度最高）
             NfcTech.Ndef,            // NDEF形式（優先度高）
             NfcTech.MifareUltralight, // MIFARE Ultralight（よく使用）
             NfcTech.MifareClassic,   // MIFARE Classic
@@ -326,7 +389,9 @@ const useNFCReal = () => {
             NfcTech.NfcF,            // FeliCa（日本固有）
             NfcTech.NfcB,            // ISO14443 Type B
             NfcTech.NdefFormatable   // フォーマット可能タグ
-          ]);
+          ];
+          
+          await NfcManager.requestTechnology(techArray);
           
           const tag = await NfcManager.getTag();
           
@@ -403,6 +468,16 @@ const useNFCReal = () => {
     } catch (error: any) {
       const errorMessage = error.message || 'クイックスキャン中にエラーが発生しました';
       
+      // iOS特有の問題対応：エラー詳細のロギング
+      if (Platform.OS === 'ios') {
+        console.log('iOS NFC エラー詳細:', {
+          error: error.message,
+          code: error.code,
+          nativeStackIOS: error.nativeStackIOS,
+          sessionActive: isSessionActive.current
+        });
+      }
+      
       setNfcState(prev => ({ 
         ...prev, 
         isScanning: false, 
@@ -411,9 +486,15 @@ const useNFCReal = () => {
       
       return null;
     } finally {
+      isSessionActive.current = false;
       try {
         const { NfcManager } = getCachedNfcManager();
         await NfcManager.cancelTechnologyRequest();
+        
+        // iOS特有の問題対応：追加のクリーンアップ待機時間
+        if (Platform.OS === 'ios') {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
       } catch (error) {
         // エラーは無視
       }
@@ -428,22 +509,45 @@ const useNFCReal = () => {
       return null;
     }
 
-    // 高速化：重複スキャン防止
+    // iOS特有の問題対応：重複スキャン防止とセッション状態確認
     const now = Date.now();
-    if (currentState.isScanning || (now - lastScanTime.current) < SCAN_THROTTLE_MS) {
-      console.log('通常スキャンスロットル中:', now - lastScanTime.current, 'ms');
+    if (currentState.isScanning || 
+        (now - lastScanTime.current) < SCAN_THROTTLE_MS || 
+        isSessionActive.current) {
+      console.log('通常スキャンスロットル中 / セッション活性中:', {
+        timeSinceLastScan: now - lastScanTime.current,
+        isSessionActive: isSessionActive.current,
+        platform: Platform.OS
+      });
       return null;
     }
     lastScanTime.current = now;
+    isSessionActive.current = true;
 
     setNfcState(prev => ({ ...prev, isScanning: true, error: null }));
 
     try {
       const { NfcManager, NfcTech } = getCachedNfcManager();
       
-      // 高速化：最も一般的なテクノロジーを優先順位で配置
-      await NfcManager.requestTechnology([
-        NfcTech.NfcA,            // 最も一般的（優先度最高）
+      // iOS特有の問題対応：既存セッションのクリーンアップ
+      if (Platform.OS === 'ios') {
+        try {
+          await NfcManager.cancelTechnologyRequest();
+          // iOS用の追加待機時間
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } catch (e) {
+          // クリーンアップエラーは無視
+        }
+      }
+      
+      // iOS特有の問題対応：プラットフォーム別のテクノロジー選択
+      const techArray = Platform.OS === 'ios' ? [
+        NfcTech.Ndef,            // iOSでは最初にNDEFを試す
+        NfcTech.NfcA,            // ISO14443-A（Core NFCで最も安定）
+        NfcTech.IsoDep,          // ISO14443-4（安定性重視）
+        NfcTech.NfcF,            // FeliCa（日本固有、iOS Core NFC対応）
+      ] : [
+        NfcTech.NfcA,            // Android：最も一般的（優先度最高）
         NfcTech.Ndef,            // NDEF形式（優先度高）
         NfcTech.MifareUltralight, // MIFARE Ultralight（よく使用）
         NfcTech.MifareClassic,   // MIFARE Classic
@@ -452,7 +556,9 @@ const useNFCReal = () => {
         NfcTech.NfcF,            // FeliCa（日本固有）
         NfcTech.NfcB,            // ISO14443 Type B
         NfcTech.NdefFormatable   // フォーマット可能タグ
-      ]);
+      ];
+      
+      await NfcManager.requestTechnology(techArray);
       
       // タグ情報を取得
       const tag = await NfcManager.getTag();
@@ -510,12 +616,27 @@ const useNFCReal = () => {
         throw new Error('NFCタグの読み取りに失敗しました');
       }
     } catch (error: any) {
+      // iOS特有の問題対応：エラー詳細のロギング
+      if (Platform.OS === 'ios') {
+        console.log('iOS NFC メイン読み取りエラー詳細:', {
+          error: error.message,
+          code: error.code,
+          nativeStackIOS: error.nativeStackIOS,
+          sessionActive: isSessionActive.current
+        });
+      }
+      
       // 複数テクノロジーでの読み取りが失敗した場合、個別に試行
       console.log('複数テクノロジー読み取り失敗、個別試行を開始:', error.message);
       
-      // 高速化：使用頻度の高い順でフォールバック（最適化された優先順位）
-      const fallbackTechs = [
-        { tech: 'NfcA', name: 'NfcA' },                   // 最高優先度
+      // iOS特有の問題対応：プラットフォーム別フォールバック戦略
+      const fallbackTechs = Platform.OS === 'ios' ? [
+        { tech: 'Ndef', name: 'Ndef' },                   // iOS：NDEF最優先
+        { tech: 'NfcA', name: 'NfcA' },                   // ISO14443-A（Core NFC安定）
+        { tech: 'IsoDep', name: 'IsoDep' },               // ISO14443-4（iOS対応良好）
+        { tech: 'NfcF', name: 'NfcF' },                   // FeliCa（日本固有、iOS対応）
+      ] : [
+        { tech: 'NfcA', name: 'NfcA' },                   // Android：最高優先度
         { tech: 'MifareUltralight', name: 'MifareUltralight' }, // 一般的
         { tech: 'Ndef', name: 'Ndef' },                   // NDEF対応
         { tech: 'MifareClassic', name: 'MifareClassic' },  // 交通系
@@ -599,6 +720,11 @@ const useNFCReal = () => {
           try {
             const { NfcManager } = getCachedNfcManager();
             await NfcManager.cancelTechnologyRequest();
+            
+            // iOS特有の問題対応：フォールバック時のクリーンアップ待機
+            if (Platform.OS === 'ios') {
+              await new Promise(resolve => setTimeout(resolve, 50));
+            }
           } catch (e) {
             // クリーンアップエラーは無視
           }
@@ -615,9 +741,15 @@ const useNFCReal = () => {
       
       return null;
     } finally {
+      isSessionActive.current = false;
       try {
         const { NfcManager } = getCachedNfcManager();
         await NfcManager.cancelTechnologyRequest();
+        
+        // iOS特有の問題対応：追加のクリーンアップ待機時間
+        if (Platform.OS === 'ios') {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
       } catch (error) {
         // エラーは無視
       }
