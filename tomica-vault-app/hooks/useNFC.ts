@@ -169,7 +169,7 @@ const useNFCReal = () => {
     };
   };
 
-  // 自動スキャン機能
+  // プラットフォーム別スキャン機能
   const startAutoScan = useCallback(async () => {
     const currentState = nfcStateRef.current;
     
@@ -180,98 +180,101 @@ const useNFCReal = () => {
     try {
       const { NfcManager, NfcEvents } = getCachedNfcManager();
       
-      // 既存のイベントリスナーをクリア
-      try {
-        await NfcManager.unregisterTagEvent();
-        NfcManager.setEventListener(NfcEvents.DiscoverTag, null);
-        NfcManager.setEventListener(NfcEvents.SessionClosed, null);
-        NfcManager.setEventListener(NfcEvents.StateChanged, null);
-      } catch (e) {
-        // エラーは無視
-      }
-      
       setNfcState(prev => ({ ...prev, isAutoScanning: true, error: null }));
       
-      // iOS特有の問題対応：タグ検出イベントリスナーを設定
-      NfcManager.setEventListener(NfcEvents.DiscoverTag, async (tag: any) => {
-        // iOS特有の問題対応：重複処理防止
-        if (Platform.OS === 'ios' && isSessionActive.current) {
-          console.log('iOS: タグ検出時にセッション既に活性中、処理をスキップ');
-          return;
-        }
-        isSessionActive.current = true;
-        // タグタイプの詳細分析
-        const techTypes = tag.techTypes || [];
-        const primaryTech = techTypes[0] || 'Unknown';
-        
-        // タグの詳細情報を構築
-        const tagDetails = {
-          id: tag.id,
-          techTypes: techTypes,
-          ndefMessage: tag.ndefMessage,
-          maxSize: tag.maxSize,
-          isWritable: tag.isWritable,
-          type: tag.type,
-          platform: Platform.OS,
-          scanTimestamp: new Date().toISOString(),
-          atqa: tag.atqa, // Android固有
-          sak: tag.sak,   // Android固有
-          uid: tag.uid,   // iOS固有
-        };
-        
-        const result: NFCReadResult = {
-          id: tag.id || 'unknown',
-          data: JSON.stringify(tagDetails, null, 2),
-          type: `${primaryTech}${techTypes.length > 1 ? ` (+${techTypes.length - 1})` : ''}`,
-          timestamp: Date.now(),
-        };
-        
-        setNfcState(prev => ({ 
-          ...prev, 
-          lastResult: result,
-          error: null 
-        }));
-
-        // スキャン成功音を再生
-        if (audioState.isEnabled) {
-          try {
-            const isReady = await waitForReady();
-            if (isReady) {
-              await playSuccessSound();
-            }
-          } catch (error) {
-            // 音声再生エラーは無視
-          }
+      if (Platform.OS === 'ios') {
+        // iOS: Core NFCは自動スキャンをサポートしていないため、手動スキャン待機状態に
+        console.log('iOS: Core NFCは自動スキャンをサポートしていません - 手動スキャン待機中');
+        console.log('iOS: NFCタグを近づけて画面をタップしてください');
+      } else {
+        // Android: 従来の自動スキャン機能
+        // 既存のイベントリスナーをクリア
+        try {
+          await NfcManager.unregisterTagEvent();
+          NfcManager.setEventListener(NfcEvents.DiscoverTag, null);
+          NfcManager.setEventListener(NfcEvents.SessionClosed, null);
+          NfcManager.setEventListener(NfcEvents.StateChanged, null);
+        } catch (e) {
+          // エラーは無視
         }
         
-        // iOS特有の問題対応：処理完了後にセッション状態をリセット
-        if (Platform.OS === 'ios') {
-          isSessionActive.current = false;
-        }
-      });
-      
-      // iOS特有の問題対応：セッションクローズイベントリスナーを設定
-      NfcManager.setEventListener(NfcEvents.SessionClosed, () => {
-        console.log(`${Platform.OS}: NFCセッションがクローズされました`);
-        isSessionActive.current = false;
-        setNfcState(prev => ({ ...prev, isAutoScanning: false }));
-      });
-      
-      // iOS特有の問題対応：状態変更イベントリスナーを設定
-      NfcManager.setEventListener(NfcEvents.StateChanged, (state: any) => {
-        console.log(`${Platform.OS}: NFC状態変更:`, state);
-        if (state === 'off') {
-          isSessionActive.current = false;
+        // タグ検出イベントリスナーを設定
+        NfcManager.setEventListener(NfcEvents.DiscoverTag, async (tag: any) => {
+          console.log(`${Platform.OS}: NFCタグが検出されました!`, {
+            tagId: tag.id,
+            techTypes: tag.techTypes,
+            platform: Platform.OS,
+            timestamp: new Date().toISOString()
+          });
+          
+          // タグタイプの詳細分析
+          const techTypes = tag.techTypes || [];
+          const primaryTech = techTypes[0] || 'Unknown';
+          
+          // タグの詳細情報を構築
+          const tagDetails = {
+            id: tag.id,
+            techTypes: techTypes,
+            ndefMessage: tag.ndefMessage,
+            maxSize: tag.maxSize,
+            isWritable: tag.isWritable,
+            type: tag.type,
+            platform: Platform.OS,
+            scanTimestamp: new Date().toISOString(),
+            atqa: tag.atqa, // Android固有
+            sak: tag.sak,   // Android固有
+            uid: tag.uid,   // iOS固有
+          };
+          
+          const result: NFCReadResult = {
+            id: tag.id || 'unknown',
+            data: JSON.stringify(tagDetails, null, 2),
+            type: `${primaryTech}${techTypes.length > 1 ? ` (+${techTypes.length - 1})` : ''}`,
+            timestamp: Date.now(),
+          };
+          
           setNfcState(prev => ({ 
             ...prev, 
-            isAutoScanning: false,
-            error: 'NFC機能が無効になりました' 
+            lastResult: result,
+            error: null 
           }));
-        }
-      });
-      
-      // 自動スキャン開始
-      await NfcManager.registerTagEvent();
+
+          // スキャン成功音を再生
+          if (audioState.isEnabled) {
+            try {
+              const isReady = await waitForReady();
+              if (isReady) {
+                await playSuccessSound();
+              }
+            } catch (error) {
+              // 音声再生エラーは無視
+            }
+          }
+        });
+        
+        // セッションクローズイベントリスナーを設定
+        NfcManager.setEventListener(NfcEvents.SessionClosed, () => {
+          console.log(`${Platform.OS}: NFCセッションがクローズされました`);
+          setNfcState(prev => ({ ...prev, isAutoScanning: false }));
+        });
+        
+        // 状態変更イベントリスナーを設定
+        NfcManager.setEventListener(NfcEvents.StateChanged, (state: any) => {
+          console.log(`${Platform.OS}: NFC状態変更:`, state);
+          if (state === 'off') {
+            setNfcState(prev => ({ 
+              ...prev, 
+              isAutoScanning: false,
+              error: 'NFC機能が無効になりました' 
+            }));
+          }
+        });
+        
+        // Android: 自動スキャン開始
+        console.log(`${Platform.OS}: registerTagEvent開始`);
+        await NfcManager.registerTagEvent();
+        console.log(`${Platform.OS}: registerTagEvent完了 - 自動スキャン待機中`);
+      }
       
     } catch (error: any) {
       setNfcState(prev => ({ 
@@ -282,26 +285,31 @@ const useNFCReal = () => {
     }
   }, [audioState.isEnabled, audioState.isLoaded, audioState.isPlaying, playSuccessSound, waitForReady]);
 
-  // 自動スキャン停止
+  // プラットフォーム別スキャン停止
   const stopAutoScan = useCallback(async () => {
     try {
       const { NfcManager, NfcEvents } = getCachedNfcManager();
       
-      // iOS特有の問題対応：全てのイベントリスナーを削除
-      try {
-        NfcManager.setEventListener(NfcEvents.DiscoverTag, null);
-        NfcManager.setEventListener(NfcEvents.SessionClosed, null);
-        NfcManager.setEventListener(NfcEvents.StateChanged, null);
-        await NfcManager.unregisterTagEvent();
-        await NfcManager.cancelTechnologyRequest();
-        
-        // iOS特有の問題対応：停止時の追加クリーンアップ
-        if (Platform.OS === 'ios') {
-          isSessionActive.current = false;
-          await new Promise(resolve => setTimeout(resolve, 200));
+      if (Platform.OS === 'ios') {
+        // iOS: 手動スキャン状態のリセットのみ
+        console.log('iOS: 手動スキャン待機を停止');
+        isSessionActive.current = false;
+        try {
+          await NfcManager.cancelTechnologyRequest();
+        } catch (e) {
+          // エラーは無視
         }
-      } catch (e) {
-        // エラーは無視（クリーンアップ時）
+      } else {
+        // Android: 全てのイベントリスナーを削除
+        try {
+          NfcManager.setEventListener(NfcEvents.DiscoverTag, null);
+          NfcManager.setEventListener(NfcEvents.SessionClosed, null);
+          NfcManager.setEventListener(NfcEvents.StateChanged, null);
+          await NfcManager.unregisterTagEvent();
+          await NfcManager.cancelTechnologyRequest();
+        } catch (e) {
+          // エラーは無視（クリーンアップ時）
+        }
       }
       
       // 状態をリセット
@@ -312,10 +320,7 @@ const useNFCReal = () => {
       }));
       
     } catch (error: any) {
-      // iOS特有の問題対応：エラー発生時のセッション状態リセット
-      if (Platform.OS === 'ios') {
-        isSessionActive.current = false;
-      }
+      isSessionActive.current = false;
       
       // エラーが発生してもスキャン状態はリセット
       setNfcState(prev => ({ 

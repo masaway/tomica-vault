@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, TouchableOpacity, Alert, StatusBar } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Alert, StatusBar, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, router, useFocusEffect } from 'expo-router';
@@ -12,7 +12,7 @@ import { logEnvironmentInfo } from '@/constants/Environment';
 import NFCModal from '@/components/NFCModal';
 
 export default function NFCReaderScreen() {
-  const { nfcState, startAutoScan, stopAutoScan } = useNFC();
+  const { nfcState, startAutoScan, stopAutoScan, readNfcTag } = useNFC();
   const { environmentName, isNFCAvailable } = useNFCEnvironment();
   const { getTomicaByNfcTagId, updateNfcScanTime, updateTomica, toggleSleepMode } = useTomica();
   
@@ -240,12 +240,33 @@ export default function NFCReaderScreen() {
               : 'NFC機能を準備中...'}
           </Text>
 
-          {/* 自動スキャン状態表示 */}
+          {/* プラットフォーム別スキャン状態表示 */}
           {nfcState.isAutoScanning && (
             <View style={styles.autoScanStatus}>
               <Ionicons name="radio" size={24} color="#4A90E2" />
-              <Text style={styles.autoScanText}>じどうタッチ中</Text>
+              <Text style={styles.autoScanText}>
+                {Platform.OS === 'ios' ? 'タッチまち' : 'じどうタッチ中'}
+              </Text>
             </View>
+          )}
+
+          {/* iOS用手動スキャンボタン */}
+          {Platform.OS === 'ios' && nfcState.isAutoScanning && (
+            <TouchableOpacity
+              style={styles.manualScanButton}
+              onPress={async () => {
+                console.log('iOS: 手動スキャン開始');
+                const result = await readNfcTag();
+                if (result) {
+                  console.log('iOS: 手動スキャン成功:', result);
+                } else {
+                  console.log('iOS: 手動スキャン失敗');
+                }
+              }}
+            >
+              <Ionicons name="scan-circle" size={32} color="#fff" />
+              <Text style={styles.manualScanButtonText}>タッチしてスキャン</Text>
+            </TouchableOpacity>
           )}
 
           {/* エラー表示 */}
@@ -404,5 +425,28 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#999',
     textAlign: 'center',
+  },
+  manualScanButton: {
+    backgroundColor: '#4A90E2',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 25,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 16,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  manualScanButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 }); 
