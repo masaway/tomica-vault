@@ -113,6 +113,21 @@ export default function NFCReaderScreen() {
     }, 300); // アニメーション後にクリア
   };
 
+  // iOS用連続スキャン開始
+  const handleContinueScan = () => {
+    setModalVisible(false);
+    // モーダルを閉じてからスキャン画面に戻る
+    setTimeout(async () => {
+      console.log('iOS: 連続スキャン開始');
+      const result = await readNfcTag();
+      if (result) {
+        console.log('iOS: 連続スキャン成功:', result);
+      } else {
+        console.log('iOS: 連続スキャン失敗');
+      }
+    }, 500); // モーダルアニメーション完了を待つ
+  };
+
   // チェックアウト処理
   const handleCheckOut = async (tomica: Tomica) => {
     try {
@@ -305,6 +320,7 @@ export default function NFCReaderScreen() {
           }
         }}
         scannedNfcTagId={nfcState.lastResult?.id}
+        onContinueScan={handleContinueScan}
       />
     </View>
     </>

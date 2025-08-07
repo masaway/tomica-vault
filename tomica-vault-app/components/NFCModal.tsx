@@ -8,6 +8,7 @@ import {
   ScrollView,
   Dimensions,
   StatusBar,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -22,6 +23,7 @@ interface NFCModalProps {
   onCheckIn: (tomica: Tomica) => void;
   onToggleSleep: (tomica: Tomica) => void;
   scannedNfcTagId?: string;
+  onContinueScan?: () => void;
 }
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('screen');
@@ -35,6 +37,7 @@ export default function NFCModal({
   onCheckIn,
   onToggleSleep,
   scannedNfcTagId,
+  onContinueScan,
 }: NFCModalProps) {
   const handleViewDetails = (tomica: Tomica) => {
     onClose();
@@ -223,17 +226,32 @@ export default function NFCModal({
               </TouchableOpacity>
             </View>
           ) : (
-            <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={true}>
-              {tomicaList.length >= 1 && (
-                <View style={styles.multipleNotice}>
-                  <Ionicons name="layers" size={16} color="#FF9500" />
-                  <Text style={styles.multipleText}>
-                    {tomicaList.length}個のおもちゃが検出されました
-                  </Text>
+            <>
+              <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={true}>
+                {tomicaList.length >= 1 && (
+                  <View style={styles.multipleNotice}>
+                    <Ionicons name="layers" size={16} color="#FF9500" />
+                    <Text style={styles.multipleText}>
+                      {tomicaList.length}個のおもちゃが検出されました
+                    </Text>
+                  </View>
+                )}
+                {tomicaList.map((tomica, index) => renderTomicaCard(tomica, index))}
+              </ScrollView>
+              
+              {/* iOS用連続スキャンボタン */}
+              {Platform.OS === 'ios' && onContinueScan && (
+                <View style={styles.continueScanContainer}>
+                  <TouchableOpacity
+                    style={styles.continueScanButton}
+                    onPress={onContinueScan}
+                  >
+                    <Ionicons name="scan" size={20} color="#fff" />
+                    <Text style={styles.continueScanButtonText}>次のおもちゃをタッチ</Text>
+                  </TouchableOpacity>
                 </View>
               )}
-              {tomicaList.map((tomica, index) => renderTomicaCard(tomica, index))}
-            </ScrollView>
+            </>
           )}
         </View>
       </View>
@@ -469,5 +487,35 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#856404',
     fontWeight: '500',
+  },
+  continueScanContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    backgroundColor: '#fff',
+  },
+  continueScanButton: {
+    backgroundColor: '#4A90E2',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+  },
+  continueScanButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
