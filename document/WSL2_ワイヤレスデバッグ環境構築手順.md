@@ -156,6 +156,10 @@ npx expo run:android
 # または分割実行
 npx expo prebuild --platform android
 npx expo run:android --device
+
+
+# このコマンドで実行できた
+npx expo start --dev-client --clear --tunnel
 ```
 
 ### 方法B: APKビルド
