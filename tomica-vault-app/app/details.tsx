@@ -252,54 +252,61 @@ export default function DetailsScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar barStyle="light-content" backgroundColor={gradientStart} />
-      <SafeAreaView style={[styles.container, { backgroundColor }]} edges={['top', 'left', 'right', 'bottom']}>
-        {/* カスタムヘッダー */}
+      <View style={styles.container}>
+        {/* Header with gradient */}
         <LinearGradient
           colors={[gradientStart, tintColor, gradientEnd]}
           style={styles.headerGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Text style={styles.backButtonText}>戻る</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>おもちゃ詳細</Text>
-          <View style={styles.headerSpacer} />
+          <SafeAreaView edges={['top', 'left', 'right']} style={styles.headerSafeArea}>
+            <View style={styles.headerContent}>
+              <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                <Text style={styles.backButtonText}>戻る</Text>
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>おもちゃ詳細</Text>
+              <View style={styles.headerSpacer} />
+            </View>
+          </SafeAreaView>
         </LinearGradient>
         
-        {loading ? (
-          <View style={styles.center}><Text>読み込み中...</Text></View>
-        ) : !tomica ? (
-          <View style={styles.center}><Text>おもちゃが見つかりませんでした</Text></View>
-        ) : (
-          <>
-            <ScrollView style={styles.content}>
-              {/* 基本情報 */}
-              <BasicInfoSection tomica={{...tomica, is_sleeping: isSleeping}} onToggleSleep={handleToggleSleep} />
-              {/* メモを移動履歴の位置（2番目）に移動 */}
-              <MemoSection tomica={tomica} />
-              {/* 登録情報 */}
-              <RegistrationInfoSection tomica={tomica} />
-            </ScrollView>
-            <View style={styles.bottomButtonContainer}>
-              <TouchableOpacity 
-                style={[styles.bottomButton, styles.editButton]} 
-                onPress={handleEdit}
-              >
-                <FontAwesome name="pencil" size={16} color="#fff" />
-                <Text style={styles.bottomButtonText}>編集</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.bottomButton, styles.deleteButton]} 
-                onPress={handleDelete}
-              >
-                <FontAwesome name="trash" size={16} color="#fff" />
-                <Text style={styles.bottomButtonText}>削除</Text>
-              </TouchableOpacity>
-            </View>
-          </>
-        )}
-      </SafeAreaView>
+        {/* Main content area */}
+        <SafeAreaView style={[styles.contentArea, { backgroundColor }]} edges={['left', 'right', 'bottom']}>
+          {loading ? (
+            <View style={styles.center}><Text>読み込み中...</Text></View>
+          ) : !tomica ? (
+            <View style={styles.center}><Text>おもちゃが見つかりませんでした</Text></View>
+          ) : (
+            <>
+              <ScrollView style={styles.content}>
+                {/* 基本情報 */}
+                <BasicInfoSection tomica={{...tomica, is_sleeping: isSleeping}} onToggleSleep={handleToggleSleep} />
+                {/* メモを移動履歴の位置（2番目）に移動 */}
+                <MemoSection tomica={tomica} />
+                {/* 登録情報 */}
+                <RegistrationInfoSection tomica={tomica} />
+              </ScrollView>
+              <View style={styles.bottomButtonContainer}>
+                <TouchableOpacity 
+                  style={[styles.bottomButton, styles.editButton]} 
+                  onPress={handleEdit}
+                >
+                  <FontAwesome name="pencil" size={16} color="#fff" />
+                  <Text style={styles.bottomButtonText}>編集</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.bottomButton, styles.deleteButton]} 
+                  onPress={handleDelete}
+                >
+                  <FontAwesome name="trash" size={16} color="#fff" />
+                  <Text style={styles.bottomButtonText}>削除</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+        </SafeAreaView>
+      </View>
     </>
   );
 }
@@ -307,15 +314,23 @@ export default function DetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   headerGradient: {
+    // No specific styles here, its height will be determined by its child (SafeAreaView)
+  },
+  headerSafeArea: {
+    backgroundColor: 'transparent',
+  },
+  headerContent: {
     paddingHorizontal: 16,
     paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     minHeight: 56,
+  },
+  contentArea: {
+    flex: 1,
   },
   backButton: {
     paddingVertical: 8,
