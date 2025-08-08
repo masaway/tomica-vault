@@ -3,8 +3,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeColor } from '../hooks/useThemeColor';
 import { useAuth } from '../hooks/useAuth';
-import { router } from 'expo-router';
-import React, { useState, useEffect } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import React, { useState, useEffect, useCallback } from 'react';
 
 export default function EditProfileScreen() {
   const backgroundColor = useThemeColor({}, 'background');
@@ -14,11 +14,30 @@ export default function EditProfileScreen() {
   const gradientStart = useThemeColor({}, 'gradientStart');
   const gradientEnd = useThemeColor({}, 'gradientEnd');
 
-  const { profile, updateUserProfile } = useAuth();
+  const { user, profile, updateUserProfile, fetchProfile, setProfile } = useAuth();
 
   const [displayName, setDisplayName] = useState(profile?.display_name || '');
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || null);
   const [isSaving, setIsSaving] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      const loadProfile = async () => {
+        if (user?.id) {
+          try {
+            const fetchedProfile = await fetchProfile(user.id);
+            if (fetchedProfile) {
+              setProfile(fetchedProfile);
+            }
+          } catch (error) {
+            console.error('プロファイル取得エラー:', error);
+          }
+        }
+      };
+
+      loadProfile();
+    }, [user?.id])
+  );
 
   useEffect(() => {
     setDisplayName(profile?.display_name || '');
@@ -66,10 +85,13 @@ export default function EditProfileScreen() {
       <SafeAreaView style={[styles.contentArea, { backgroundColor }]} edges={['left', 'right', 'bottom']}>
         <ScrollView style={styles.contentScroll}>
           <View style={styles.avatarContainer}>
-            <Image 
-              source={avatarUrl ? { uri: avatarUrl } : require('../assets/images/icon.png')} 
+            <Image
+              source={avatarUrl ? { uri: avatarUrl } : require('../assets/images/icon.png')}
               style={styles.avatar}
             />
+            <Text style={[styles.displayNameText, { color: textColor }]}>
+              {profile?.display_name || 'ゲストユーザー'}
+            </Text>
           </View>
 
           <View style={styles.inputContainer}>
